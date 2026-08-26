@@ -1,0 +1,193 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-display), ui-serif, Georgia, serif;
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  --color-rose: var(--rose);
+  --color-rose-foreground: var(--rose-foreground);
+
+  --color-emphasis: var(--emphasis);
+  --color-emphasis-foreground: var(--emphasis-foreground);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+}
+
+:root {
+  color-scheme: light;
+  --radius: 0.75rem;
+
+  /* soft warm white with a rose tint */
+  --background: #fffbfc;
+  --foreground: #33263a;
+
+  --card: #ffffff;
+  --card-foreground: #33263a;
+  --popover: #ffffff;
+  --popover-foreground: #33263a;
+
+  /* brand pink */
+  --primary: #f06d84;
+  --primary-foreground: #ffffff;
+
+  /* soft pink surface */
+  --secondary: #f9eaf1;
+  --secondary-foreground: #7e5097;
+
+  --muted: #f6eef3;
+  --muted-foreground: #7c6a82;
+
+  /* soft pink accent surface */
+  --accent: #f9eaf1;
+  --accent-foreground: #7e5097;
+
+  /* pink highlight */
+  --rose: #f06d84;
+  --rose-foreground: #ffffff;
+
+  /* purple emphasis for destacado headings */
+  --emphasis: #7e5097;
+  --emphasis-foreground: #ffffff;
+
+  --destructive: oklch(0.577 0.245 27.325);
+
+  --border: #f1dbe6;
+  --input: #f1dbe6;
+  --ring: #f06d84;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ===== High-conversion CTA microinteractions ===== */
+
+@keyframes cta-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+
+@keyframes cta-shimmer {
+  0% {
+    transform: translateX(-160%) skewX(-20deg);
+  }
+  60%,
+  100% {
+    transform: translateX(320%) skewX(-20deg);
+  }
+}
+
+@keyframes cta-glow {
+  0%,
+  100% {
+    box-shadow: 0 8px 26px -8px rgba(240, 109, 132, 0.55);
+  }
+  50% {
+    box-shadow: 0 12px 34px -4px rgba(240, 109, 132, 0.85);
+  }
+}
+
+.cta-animated {
+  position: relative;
+  overflow: hidden;
+  animation: cta-heartbeat 2.6s ease-in-out infinite, cta-glow 2.6s ease-in-out infinite;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* diagonal luminous shimmer sweep */
+.cta-animated::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 70%
+  );
+  transform: translateX(-160%) skewX(-20deg);
+  animation: cta-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.cta-animated:hover {
+  animation: none;
+  transform: scale(1.05);
+  box-shadow: 0 16px 44px -6px rgba(240, 109, 132, 0.9);
+}
+
+/* inverted variant for white buttons over the pink banner */
+@keyframes cta-glow-invert {
+  0%,
+  100% {
+    box-shadow: 0 8px 26px -8px rgba(255, 255, 255, 0.55);
+  }
+  50% {
+    box-shadow: 0 12px 36px -4px rgba(255, 255, 255, 0.9);
+  }
+}
+
+.cta-animated-invert {
+  animation: cta-heartbeat 2.6s ease-in-out infinite,
+    cta-glow-invert 2.6s ease-in-out infinite;
+}
+
+.cta-animated-invert::after {
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(240, 109, 132, 0.35) 50%,
+    transparent 70%
+  );
+}
+
+.cta-animated-invert:hover {
+  box-shadow: 0 16px 46px -6px rgba(255, 255, 255, 0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-animated,
+  .cta-animated::after,
+  .cta-animated-invert,
+  .cta-animated-invert::after {
+    animation: none;
+  }
+}
