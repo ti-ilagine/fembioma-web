@@ -36,6 +36,37 @@ export const viewport: Viewport = {
   themeColor: '#7e5097',
 }
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: 'FEMBIOMA World Summit 2026',
+  description:
+    'Congreso internacional de microbiota, nutrición y medicina de precisión femenina.',
+  startDate: '2026-10-17T08:00:00-05:00',
+  endDate: '2026-10-18T18:00:00-05:00',
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  location: {
+    '@type': 'Place',
+    name: 'Hotel Sheraton Lima',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Lima',
+      addressCountry: 'PE',
+    },
+  },
+  organizer: {
+    '@type': 'Organization',
+    name: 'Ilagine',
+    url: 'https://ilagine.com',
+  },
+  performer: {
+    '@type': 'Person',
+    name: 'Dr. Cristian Hidalgo',
+    jobTitle: 'Médico Ginecólogo y Obstetra',
+  },
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,6 +74,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${inter.variable} ${fraunces.variable} bg-background`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
