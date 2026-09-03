@@ -18,7 +18,7 @@ export function HeroSection() {
             </span>
             <Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="text-balance">
-              ¡Tarifas de Pronto Pago válidas hasta el 31 de Agosto!
+              ¡Tarifas de Pronto Pago válidas hasta el 15 de Septiembre!
             </span>
           </div>
 
