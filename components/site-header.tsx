@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Menu, X, Dna } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { REGISTRATION_URL } from '@/lib/config'
 
 const navLinks = [
@@ -15,54 +15,67 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 lg:px-8">
-        <a href="#top" className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Dna className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <span className="font-serif text-base font-semibold leading-none tracking-tight text-emphasis sm:text-lg">
-            FEMBIOMA <span className="text-primary">World Summit</span>
-          </span>
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 lg:px-8">
+
+        {/* LOGO FEMBIOMA */}
+        <a href="#top" className="flex shrink-0 items-center">
+          <img
+            src="/logo-fembioma.png"
+            alt="Fembioma - Congreso Mundial de Microbioma Femenino"
+            className="h-10 w-auto object-contain sm:h-12 lg:h-14"
+          />
         </a>
 
-        <nav className="hidden items-center gap-7 lg:flex" aria-label="Principal">
+        {/* MENÚ DE ESCRITORIO */}
+        <nav
+          className="hidden items-center gap-7 lg:flex"
+          aria-label="Principal"
+        >
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-emphasis"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
               {link.label}
             </a>
           ))}
         </nav>
 
+        {/* LADO DERECHO */}
         <div className="flex items-center gap-3">
-          {/* Logos oficiales integrados directamente */}
-          <div className="hidden items-center gap-4 border-r border-border/60 pr-4 md:flex">
-            <img
-              src="/logo-cmh.png"
-              alt="CMP CRXI Huaraz"
-              className="h-8 w-auto object-contain transition-opacity hover:opacity-85"
-              title="Colegio Médico del Perú (CRXI - Huaraz)"
-            />
-            <img
-              src="/logo-ilagine.png"
-              alt="Ilagine"
-              className="h-7 w-auto object-contain transition-opacity hover:opacity-85"
-              title="Ilagine"
-            />
-          </div>
 
+          {/* BOTÓN REGISTRARME */}
           <a
             href={REGISTRATION_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="cta-animated hidden rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:inline-flex"
+            className="cta-animated hidden rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:inline-flex"
           >
             Registrarme
           </a>
+
+          {/* LOGOS INSTITUCIONALES */}
+          <div className="hidden items-center gap-4 border-l border-border/60 pl-4 md:flex">
+
+            <img
+              src="/logo-cmh.png"
+              alt="Colegio Médico del Perú - Consejo Regional XI Huaraz"
+              className="h-11 w-auto object-contain lg:h-12"
+              title="Colegio Médico del Perú - CR XI Huaraz"
+            />
+
+            <img
+              src="/logo-ilagine.png"
+              alt="ILAGINE"
+              className="h-9 w-auto object-contain lg:h-10"
+              title="ILAGINE"
+            />
+
+          </div>
+
+          {/* BOTÓN MENÚ MÓVIL */}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -70,14 +83,23 @@ export function SiteHeader() {
             aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
             aria-expanded={open}
           >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {open ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
+
         </div>
       </div>
 
+      {/* MENÚ MÓVIL */}
       {open && (
         <div className="border-t border-border/60 bg-background lg:hidden">
-          <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-3" aria-label="Móvil">
+          <nav
+            className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-3"
+            aria-label="Móvil"
+          >
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -88,14 +110,30 @@ export function SiteHeader() {
                 {link.label}
               </a>
             ))}
+
             <a
               href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1 rounded-full bg-primary px-5 py-2.5 text-center text-sm font-semibold text-primary-foreground"
+              className="mt-2 rounded-full bg-primary px-5 py-2.5 text-center text-sm font-semibold text-primary-foreground"
             >
               Registrarme
             </a>
+
+            {/* LOGOS EN MÓVIL */}
+            <div className="mt-4 flex items-center justify-center gap-6 border-t border-border/60 pt-4">
+              <img
+                src="/logo-cmh.png"
+                alt="Colegio Médico del Perú - CR XI Huaraz"
+                className="h-12 w-auto object-contain"
+              />
+
+              <img
+                src="/logo-ilagine.png"
+                alt="ILAGINE"
+                className="h-10 w-auto object-contain"
+              />
+            </div>
           </nav>
         </div>
       )}
