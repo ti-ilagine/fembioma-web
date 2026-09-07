@@ -16,6 +16,10 @@ const fraunces = Fraunces({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://fembioma.com'),
+  alternates: {
+    canonical: '/',
+  },
   title: 'FEMBIOMA World Summit 2026 | Microbioma, Nutrición y Medicina de Precisión Femenina',
   description:
     'Congreso internacional de microbiota, nutrición y medicina de precisión femenina, liderado por el Dr. Cristian Hidalgo. Avalado por el Colegio Médico del Perú (CRXI - Huaraz). 17 y 18 de Octubre, Hotel Sheraton Lima.',
