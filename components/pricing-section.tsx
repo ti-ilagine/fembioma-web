@@ -21,7 +21,7 @@ const plans: Plan[] = [
   {
     mode: 'Presencial',
     icon: Building2,
-    note: 'Incluye materiales, coffee break y networking en Huaraz.',
+    note: 'Incluye materiales, coffee break y networking.',
     tiers: [
       {
         role: 'Médicos',
