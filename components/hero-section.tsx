@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { ArrowRight, Clock, Award } from 'lucide-react'
+import { ArrowRight, Clock, Award, Calendar } from 'lucide-react'
 import { REGISTRATION_URL } from '@/lib/config'
 
 export function HeroSection() {
@@ -22,19 +22,25 @@ export function HeroSection() {
             </span>
           </div>
 
-            <h1 className="font-serif leading-tight tracking-tight">
+          <h1 className="font-serif leading-tight tracking-tight">
             {/* Título principal con el rosa fuerte (#f06d84) */}
             <span className="block text-3xl sm:text-4xl lg:text-5xl font-medium text-[#f06d84]">
-            FEMBIOMA World Summit 2026
+              FEMBIOMA World Summit 2026
             </span>
 
-          {/* Subtítulo en tamaño 38px (o responsivo hasta 38px) y gris medio */}
-          <span className="block text-2xl sm:text-3xl lg:text-[36px] font-normal text-gray-600 mt-3">
-            Congreso Latinoamericano de Microbiota Femenina y Medicina de Precisión.
-          </span>
-        </h1>
+            {/* Subtítulo en tamaño 38px (o responsivo hasta 38px) y gris medio */}
+            <span className="block text-2xl sm:text-3xl lg:text-[36px] font-normal text-gray-600 mt-3">
+              Congreso Latinoamericano de Microbiota Femenina y Medicina de Precisión.
+            </span>
+          </h1>
 
-          <p className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0">
+          {/* Fecha y Sede */}
+          <div className="mt-6 flex items-center justify-center gap-2 text-base font-semibold text-emphasis sm:text-lg lg:justify-start">
+            <Calendar className="h-5 w-5 text-primary" aria-hidden="true" />
+            <span>17 y 18 de Octubre, 2026 • Lima, Perú</span>
+          </div>
+
+          <p className="mx-auto mt-3 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0">
             Certificación oficial con horas académicas avalada por el Colegio Médico del Perú{' '}
             <span className="font-medium text-foreground">(CRXI - Huaraz).</span>
           </p>
