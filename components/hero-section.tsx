@@ -1,8 +1,36 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ArrowRight, Clock, Award, Calendar } from 'lucide-react'
 import { REGISTRATION_URL } from '@/lib/config'
 
+const SLIDES = [
+  {
+    src: '/hero-doctores.png',
+    alt: 'Doctores especialistas ponentes en el Congreso Fembioma',
+  },
+  {
+    src: '/hero-organizadores.png',
+    alt: 'Comité y entidades organizadoras del Congreso Fembioma',
+  },
+  {
+    src: '/hero-mujer-microbiota.png',
+    alt: 'Ilustración de una mujer entrelazada con una hélice de ADN y microbiota, representando la medicina de precisión femenina.',
+  },
+]
+
 export function HeroSection() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % SLIDES.length)
+    }, 2000)
+
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <section id="top" className="relative overflow-hidden">
       {/* soft background wash */}
@@ -69,17 +97,41 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Featured image container */}
+        {/* Featured image container / Slider */}
         <div className="relative mx-auto w-full max-w-md lg:max-w-none">
           <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-border bg-secondary shadow-xl shadow-primary/10">
-            <Image
-              src="/hero-woman-dna.png"
-              alt="Ilustración de una mujer entrelazada con una hélice de ADN y microbiota, representando la medicina de precisión femenina."
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
+            {SLIDES.map((slide, index) => (
+              <div
+                key={slide.src}
+                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                  index === currentSlide ? 'opacity-100 z-10' : 'pointer-events-none opacity-0 z-0'
+                }`}
+              >
+                <Image
+                  src={slide.src}
+                  alt={slide.alt}
+                  fill
+                  priority={index === 0}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
+            ))}
+
+            {/* Indicadores de diapositiva */}
+            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+              {SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`h-2 rounded-full transition-all ${
+                    idx === currentSlide ? 'w-6 bg-primary' : 'w-2 bg-primary/30'
+                  }`}
+                  aria-label={`Ir a diapositiva ${idx + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
