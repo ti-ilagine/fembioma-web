@@ -1,5 +1,8 @@
+'use client'
+
 import { Check, Building2, Wifi } from 'lucide-react'
 import { REGISTRATION_URL, EARLY_BIRD_DEADLINE } from '@/lib/config'
+import { trackPixelEvent } from '@/lib/pixel'
 
 type Tier = {
   role: string
@@ -131,6 +134,12 @@ export function PricingSection() {
               href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                trackPixelEvent('Lead', {
+                  content_name: `Inscripción Fembioma 2026 - Modalidad ${plan.mode}`,
+                  plan_type: plan.mode,
+                })
+              }}
               className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02] hover:bg-primary/90"
             >
               Inscribirme ({plan.mode})
