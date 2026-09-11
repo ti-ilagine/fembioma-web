@@ -1,5 +1,8 @@
+'use client'
+
 import { ArrowRight, Dna } from 'lucide-react'
 import { REGISTRATION_URL } from '@/lib/config'
+import { trackPixelEvent } from '@/lib/pixel'
 
 export function FooterCTA() {
   return (
@@ -11,12 +14,17 @@ export function FooterCTA() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-pretty text-sm leading-relaxed text-primary-foreground/80 sm:text-base">
             Únete a FEMBIOMA World Summit y forma parte de una nueva era en la medicina de
-            precisión femenina. Las tarifas de pronto pago vencen el 31 de Agosto.
+            precisión femenina. Las tarifas de pronto pago vencen el 15 de Septiembre.
           </p>
           <a
             href={REGISTRATION_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              trackPixelEvent('Lead', {
+                content_name: 'Inscripción Fembioma 2026 - Banner Footer CTA',
+              })
+            }}
             className="cta-animated cta-animated-invert group mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-background px-8 py-4 text-base font-semibold text-primary"
           >
             Registrarme Ahora
