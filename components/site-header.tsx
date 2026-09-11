@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { REGISTRATION_URL } from '@/lib/config'
+import { trackPixelEvent } from '@/lib/pixel'
 
 const navLinks = [
   { label: 'Agenda', href: '#agenda' },
@@ -46,11 +47,16 @@ export function SiteHeader() {
         {/* LADO DERECHO */}
         <div className="flex items-center gap-3">
 
-          {/* BOTÓN REGISTRARME */}
+          {/* BOTÓN REGISTRARME (DESKTOP) */}
           <a
             href={REGISTRATION_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              trackPixelEvent('Lead', {
+                content_name: 'Inscripción Fembioma 2026 - Header Desktop',
+              })
+            }}
             className="cta-animated hidden rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:inline-flex"
           >
             Registrarme
@@ -115,6 +121,11 @@ export function SiteHeader() {
               href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                trackPixelEvent('Lead', {
+                  content_name: 'Inscripción Fembioma 2026 - Header Móvil',
+                })
+              }}
               className="mt-2 rounded-full bg-primary px-5 py-2.5 text-center text-sm font-semibold text-primary-foreground"
             >
               Registrarme
