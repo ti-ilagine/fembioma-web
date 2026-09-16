@@ -39,14 +39,16 @@ export function HeroSection() {
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-24">
         {/* Text column */}
         <div className="text-center lg:text-left">
-          <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-emphasis sm:text-sm">
-            <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+          
+          {/* Alerta Destacada de Preventa */}
+          <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border-2 border-primary bg-primary/15 px-5 py-2 text-xs font-extrabold uppercase tracking-wide text-emphasis shadow-lg shadow-primary/15 sm:text-sm">
+            <span className="relative flex h-3 w-3 shrink-0" aria-hidden="true">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-primary" />
             </span>
-            <Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <span className="text-balance">
-              ¡Tarifas de Pronto Pago válidas hasta el 15 de Septiembre!
+              ¡Preventa hasta el 30 de Septiembre!
             </span>
           </div>
 
