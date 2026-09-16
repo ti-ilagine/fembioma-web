@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Building2, Wifi } from 'lucide-react'
+import { Check, Building2, Wifi, Clock } from 'lucide-react'
 import { REGISTRATION_URL, EARLY_BIRD_DEADLINE } from '@/lib/config'
 import { trackPixelEvent } from '@/lib/pixel'
 
@@ -69,9 +69,13 @@ export function PricingSection() {
         </h2>
       </div>
 
-      <p className="mx-auto mb-12 flex max-w-md items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-center text-sm font-semibold text-emphasis">
-        Pronto Pago (Early Bird) válido hasta el {EARLY_BIRD_DEADLINE}
-      </p>
+      {/* Alerta Destacada de Preventa */}
+      <div className="mx-auto mb-12 flex max-w-xl items-center justify-center gap-3 rounded-2xl border-2 border-primary bg-primary/15 px-6 py-3.5 text-center shadow-lg shadow-primary/10">
+        <Clock className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+        <span className="text-sm font-extrabold uppercase tracking-wider text-emphasis sm:text-base">
+          ¡Preventa válida hasta el {EARLY_BIRD_DEADLINE}!
+        </span>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {plans.map((plan) => (
