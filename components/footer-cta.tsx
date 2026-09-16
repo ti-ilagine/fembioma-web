@@ -14,7 +14,7 @@ export function FooterCTA() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-pretty text-sm leading-relaxed text-primary-foreground/80 sm:text-base">
             Únete a FEMBIOMA World Summit y forma parte de una nueva era en la medicina de
-            precisión femenina. Las tarifas de pronto pago vencen el 15 de Septiembre.
+            precisión femenina. Las tarifas de pronto pago vencen el 30 de Septiembre.
           </p>
           <a
             href={REGISTRATION_URL}
