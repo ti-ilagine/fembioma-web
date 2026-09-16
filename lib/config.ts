@@ -2,4 +2,4 @@
 export const REGISTRATION_URL =
   'https://forms.cloud.microsoft/r/M8j6hK4KHu'
 
-export const EARLY_BIRD_DEADLINE = '15 de Setiembre'
+export const EARLY_BIRD_DEADLINE = '30 de Setiembre'
