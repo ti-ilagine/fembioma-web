@@ -85,7 +85,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
 
-        {/* Meta Pixel Base Code */}
+        {/* Meta Pixel Base Code (Jean + Karwin) */}
         <Script id="meta-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
@@ -97,6 +97,7 @@ export default function RootLayout({
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '2523768638089235');
+            fbq('init', '1671150207956363');
             fbq('track', 'PageView');
           `}
         </Script>
@@ -109,6 +110,13 @@ export default function RootLayout({
             width="1"
             style={{ display: 'none' }}
             src="https://www.facebook.com/tr?id=2523768638089235&ev=PageView&noscript=1"
+            alt=""
+          />
+          <img
+            height="1"
+            width="1"
+            style={{ display: 'none' }}
+            src="https://www.facebook.com/tr?id=1671150207956363&ev=PageView&noscript=1"
             alt=""
           />
         </noscript>
