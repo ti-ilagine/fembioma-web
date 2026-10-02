@@ -1,52 +1,66 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Lock, Play, AlertCircle, ShieldCheck, LogOut, Film } from 'lucide-react'
+import { Lock, Play, AlertCircle, ShieldCheck, LogOut, Film, KeyRound } from 'lucide-react'
 
-// 1. PADRÓN DE PARTICIPANTES (Mock inicial / Se puede reemplazar con fetch a Google Sheets)
+// 1. PADRÓN DE PARTICIPANTES (Mock inicial / Se puede conectar a Google Sheets / API)
 const PADRON_AUTORIZADO = [
-  { dni: '44073684', correo: 'marlon@domoy.pe', nombre: 'Marlon Molina' },
-  { dni: '12345678', correo: 'karwin@ilagine.com', nombre: 'Karwin Alcántara' },
-  { dni: '87654321', correo: 'doctor@fembioma.com', nombre: 'Médico Participante' }
+  { 
+    dni: '44073684', 
+    correo: 'marlon@domoy.pe', 
+    codigo: 'FEM-2026-M44', 
+    nombre: 'Marlon Molina' 
+  },
+  { 
+    dni: '12345678', 
+    correo: 'karwin@ilagine.com', 
+    codigo: 'FEM-VIP-2026', 
+    nombre: 'Karwin Alcántara' 
+  },
+  { 
+    dni: '87654321', 
+    correo: 'doctor@fembioma.com', 
+    codigo: 'DOC-FEM-001', 
+    nombre: 'Médico Participante' 
+  }
 ]
 
 // 2. LISTA DE VIDEOS (YouTube Unlisted / Ocultos)
-// Usamos videos random/demo de medicina y congresos para la prueba
 const VIDEOS_CONGRESO = [
   {
     id: 'demo-1',
     titulo: 'Sesión Inaugural: Avances en Microbiota Vaginal y Diagnóstico de Precisión',
     duracion: '45 min',
     fecha: 'Día 1 - Bloque Mañana',
-    youtubeId: 'M7lc1UVf-VE' // Video demo de prueba
+    youtubeId: 'M7lc1UVf-VE'
   },
   {
     id: 'demo-2',
     titulo: 'Mesa Redonda: Abordaje Clínico de Disbiosis Recurrente',
     duracion: '55 min',
     fecha: 'Día 1 - Bloque Tarde',
-    youtubeId: 'dQw4w9WgXcQ' // Video demo de prueba
+    youtubeId: 'dQw4w9WgXcQ'
   }
 ]
 
-// 3. FECHA DE EXPIRACIÓN DEL ACCESO (Ejemplo: 45 días)
+// 3. FECHA DE EXPIRACIÓN DEL ACCESO (Ejemplo: vigencia por tiempo limitado)
 const FECHA_LIMITE = new Date('2026-11-30T23:59:59')
 
 export default function GrabacionesPage() {
   const [dni, setDni] = useState('')
   const [correo, setCorreo] = useState('')
+  const [codigoAcceso, setCodigoAcceso] = useState('')
   const [error, setError] = useState('')
-  const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ nombre: string; dni: string } | null>(null)
+  const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ nombre: string; dni: string; codigo: string } | null>(null)
   const [videoActivo, setVideoActivo] = useState(VIDEOS_CONGRESO[0])
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
 
-  // Deshabilitar clic derecho en toda la sección de videos
+  // Deshabilitar clic derecho e inspección básica en la sección de videos
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault()
     }
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Bloquear Ctrl+U (ver fuente), Ctrl+Shift+I (inspeccionar), F12
       if (
         e.key === 'F12' ||
         (e.ctrlKey && (e.key === 'u' || e.key === 'U' || (e.shiftKey && (e.key === 'I' || e.key === 'J'))))
@@ -55,12 +69,10 @@ export default function GrabacionesPage() {
       }
     }
 
-    // Verificar si expiró la fecha
     if (new Date() > FECHA_LIMITE) {
       setTiempoExpirado(true)
     }
 
-    // Recuperar sesión guardada
     const sesionGuardada = sessionStorage.getItem('fembioma_user')
     if (sesionGuardada) {
       setUsuarioAutenticado(JSON.parse(sesionGuardada))
@@ -80,17 +92,25 @@ export default function GrabacionesPage() {
 
     const dniLimpio = dni.trim()
     const correoLimpio = correo.trim().toLowerCase()
+    const codigoLimpio = codigoAcceso.trim().toUpperCase()
 
     const encontrado = PADRON_AUTORIZADO.find(
-      (u) => u.dni === dniLimpio && u.correo.toLowerCase() === correoLimpio
+      (u) =>
+        u.dni === dniLimpio &&
+        u.correo.toLowerCase() === correoLimpio &&
+        u.codigo.toUpperCase() === codigoLimpio
     )
 
     if (encontrado) {
-      const dataUsuario = { nombre: encontrado.nombre, dni: encontrado.dni }
+      const dataUsuario = { 
+        nombre: encontrado.nombre, 
+        dni: encontrado.dni,
+        codigo: encontrado.codigo
+      }
       setUsuarioAutenticado(dataUsuario)
       sessionStorage.setItem('fembioma_user', JSON.stringify(dataUsuario))
     } else {
-      setError('Documento de identidad o correo no figura en el padrón oficial de inscritos confirmados.')
+      setError('Los datos ingresados (DNI, correo o código de acceso) no coinciden con el padrón oficial de inscritos confirmados.')
     }
   }
 
@@ -99,9 +119,9 @@ export default function GrabacionesPage() {
     setUsuarioAutenticado(null)
     setDni('')
     setCorreo('')
+    setCodigoAcceso('')
   }
 
-  // Si expiró el tiempo de visualización
   if (tiempoExpirado) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
@@ -109,7 +129,7 @@ export default function GrabacionesPage() {
           <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
           <h1 className="text-2xl font-serif font-bold text-white mb-2">Acceso Finalizado</h1>
           <p className="text-sm text-slate-400">
-            El periodo oficial de 45 días para la visualización de las grabaciones del FEMBIOMA World Summit 2026 ha concluido.
+            El periodo oficial para la visualización de las sesiones del FEMBIOMA World Summit 2026 ha concluido.
           </p>
         </div>
       </div>
@@ -118,7 +138,7 @@ export default function GrabacionesPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-[#f06d84]/30">
-      {/* Vista 1: Formulario de Login si no está autenticado */}
+      {/* Vista 1: Formulario de Autenticación */}
       {!usuarioAutenticado ? (
         <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12">
           <div className="w-full max-w-md">
@@ -127,10 +147,10 @@ export default function GrabacionesPage() {
                 <Lock className="w-6 h-6" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-white">
-                Aula Virtual FEMBIOMA 2026
+                Sesiones FEMBIOMA World Summit 2026
               </h1>
               <p className="text-sm text-slate-400 mt-2">
-                Ingreso exclusivo para participantes inscritos. Digita tu documento para acceder a las ponencias.
+                Ingreso exclusivo para participantes inscritos. Digita tu documento, correo y código de acceso.
               </p>
             </div>
 
@@ -174,12 +194,29 @@ export default function GrabacionesPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Código de Acceso
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={codigoAcceso}
+                      onChange={(e) => setCodigoAcceso(e.target.value)}
+                      placeholder="Ej. FEM-VIP-2026"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-wider font-mono"
+                    />
+                    <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2"
                 >
                   <ShieldCheck className="w-4 h-4" />
-                  Validar y Ver Grabaciones
+                  Validar e Ingresar
                 </button>
               </div>
 
@@ -192,16 +229,16 @@ export default function GrabacionesPage() {
           </div>
         </div>
       ) : (
-        /* Vista 2: Plataforma de Visualización de Videos */
+        /* Vista 2: Visualizador de Sesiones */
         <div className="min-h-screen flex flex-col">
           {/* Header Superior */}
           <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
             <div className="flex items-center gap-3">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <div>
-                <h2 className="text-sm font-semibold text-white">FEMBIOMA World Summit 2026</h2>
+                <h2 className="text-sm font-semibold text-white">Sesiones FEMBIOMA World Summit 2026</h2>
                 <p className="text-xs text-slate-400">
-                  Participante: <span className="text-slate-200 font-medium">{usuarioAutenticado.nombre}</span> (DNI: {usuarioAutenticado.dni})
+                  Participante: <span className="text-slate-200 font-medium">{usuarioAutenticado.nombre}</span> (Doc: {usuarioAutenticado.dni} · Cód: {usuarioAutenticado.codigo})
                 </p>
               </div>
             </div>
@@ -218,11 +255,10 @@ export default function GrabacionesPage() {
           {/* Contenido Principal */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid lg:grid-cols-3 gap-8 items-start">
             
-            {/* Columna Izquierda: Reproductor Principal */}
+            {/* Reproductor Principal */}
             <div className="lg:col-span-2 space-y-4">
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl">
                 
-                {/* 1. Iframe de YouTube Embebido */}
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${videoActivo.youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0`}
                   title={videoActivo.titulo}
@@ -231,15 +267,15 @@ export default function GrabacionesPage() {
                   className="w-full h-full border-0 select-none"
                 />
 
-                {/* 2. Capa transparente superior (Bloquea clics en el logo de YouTube y título original) */}
+                {/* Capa de protección para evitar clic al título/logo de YouTube */}
                 <div 
                   className="absolute top-0 left-0 w-full h-16 pointer-events-auto bg-transparent z-10"
                   onContextMenu={(e) => e.preventDefault()}
                 />
 
-                {/* 3. Marca de agua fija institucional (Punto 9 de Karwin) */}
+                {/* Marca de agua institucional fija */}
                 <div className="absolute top-3 right-3 z-20 pointer-events-none select-none bg-slate-950/80 backdrop-blur-sm border border-slate-700/50 px-3 py-1 rounded-md text-[10px] tracking-wide text-slate-300 font-mono shadow-sm">
-                  FEMBIOMA 2026 · Uso Exclusivo ({usuarioAutenticado.dni}) · Prohibida su copia
+                  FEMBIOMA 2026 · Doc: {usuarioAutenticado.dni} · Uso Exclusivo
                 </div>
               </div>
 
@@ -252,17 +288,17 @@ export default function GrabacionesPage() {
                   {videoActivo.titulo}
                 </h3>
                 <p className="text-xs text-slate-400 mt-2">
-                  Este contenido está protegido por derechos de autor de Fundación FEMBIOMA. La reproducción y descarga sin autorización están prohibidas.
+                  Material exclusivo del FEMBIOMA World Summit 2026. Prohibida su reproducción, descarga o distribución sin autorización previa.
                 </p>
               </div>
             </div>
 
-            {/* Columna Derecha: Temario / Lista de Sesiones */}
+            {/* Lista lateral de módulos */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                 <Film className="w-4 h-4 text-[#f06d84]" />
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Módulos Disponibles
+                  Módulos y Grabaciones
                 </h4>
               </div>
 
@@ -300,7 +336,7 @@ export default function GrabacionesPage() {
               </div>
 
               <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-400">
-                🔒 Visualización habilitada hasta el <strong>30 de Noviembre de 2026</strong>.
+                🔒 Acceso restringido por credenciales oficiales de participante.
               </div>
             </div>
           </main>
