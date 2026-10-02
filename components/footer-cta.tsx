@@ -10,11 +10,11 @@ export function FooterCTA() {
       <section className="mx-auto max-w-6xl px-5 py-12 lg:px-8">
         <div className="overflow-hidden rounded-3xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12 lg:py-20">
           <h2 className="mx-auto max-w-2xl text-balance font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-            Asegura tu cupo con la tarifa de pronto pago
+            Asegura tu participación en el congreso
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-pretty text-sm leading-relaxed text-primary-foreground/80 sm:text-base">
-            Únete a FEMBIOMA World Summit y forma parte de una nueva era en la medicina de
-            precisión femenina. Las tarifas de pronto pago vencen el 30 de Septiembre.
+            Únete a FEMBIOMA World Summit 2026 y forma parte de una nueva era en la medicina de
+            precisión femenina. Últimas vacantes disponibles para modalidades presencial y virtual.
           </p>
           <a
             href={REGISTRATION_URL}
