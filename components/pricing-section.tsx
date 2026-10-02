@@ -1,15 +1,13 @@
 'use client'
 
-import { Check, Building2, Wifi, Clock } from 'lucide-react'
-import { REGISTRATION_URL, EARLY_BIRD_DEADLINE } from '@/lib/config'
+import { Check, Building2, Wifi } from 'lucide-react'
+import { REGISTRATION_URL } from '@/lib/config'
 import { trackPixelEvent } from '@/lib/pixel'
 
 type Tier = {
   role: string
-  earlySoles: string
-  earlyUsd: string
-  regularSoles: string
-  regularUsd: string
+  soles: string
+  usd: string
   featured?: boolean
 }
 
@@ -28,14 +26,12 @@ const plans: Plan[] = [
     tiers: [
       {
         role: 'Médicos',
-        earlySoles: 'S/. 300',
-        earlyUsd: '$100',
-        regularSoles: 'S/. 450',
-        regularUsd: '$140',
+        soles: 'S/. 450',
+        usd: '$140',
         featured: true,
       },
-      { role: 'Otros profesionales', earlySoles: 'S/. 250', earlyUsd: '$80', regularSoles: 'S/. 350', regularUsd: '$120' },
-      { role: 'Estudiantes', earlySoles: 'S/. 150', earlyUsd: '$50', regularSoles: 'S/. 250', regularUsd: '$80' },
+      { role: 'Otros profesionales', soles: 'S/. 350', usd: '$120' },
+      { role: 'Estudiantes', soles: 'S/. 250', usd: '$80' },
     ],
   },
   {
@@ -45,14 +41,12 @@ const plans: Plan[] = [
     tiers: [
       {
         role: 'Médicos',
-        earlySoles: 'S/. 250',
-        earlyUsd: '$80',
-        regularSoles: 'S/. 350',
-        regularUsd: '$120',
+        soles: 'S/. 350',
+        usd: '$120',
         featured: true,
       },
-      { role: 'Otros profesionales', earlySoles: 'S/. 200', earlyUsd: '$60', regularSoles: 'S/. 300', regularUsd: '$100' },
-      { role: 'Estudiantes', earlySoles: 'S/. 100', earlyUsd: '$40', regularSoles: 'S/. 200', regularUsd: '$60' },
+      { role: 'Otros profesionales', soles: 'S/. 300', usd: '$100' },
+      { role: 'Estudiantes', soles: 'S/. 200', usd: '$60' },
     ],
   },
 ]
@@ -60,21 +54,16 @@ const plans: Plan[] = [
 export function PricingSection() {
   return (
     <section id="precios" className="mx-auto max-w-6xl px-5 py-16 lg:px-8 lg:py-24">
-      <div className="mx-auto mb-4 max-w-2xl text-center">
+      <div className="mx-auto mb-10 max-w-2xl text-center">
         <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary">
           Inversión
         </p>
         <h2 className="text-balance font-serif text-3xl font-semibold tracking-tight text-emphasis sm:text-4xl">
           Elige tu modalidad de participación
         </h2>
-      </div>
-
-      {/* Alerta Destacada de Preventa */}
-      <div className="mx-auto mb-12 flex max-w-xl items-center justify-center gap-3 rounded-2xl border-2 border-primary bg-primary/15 px-6 py-3.5 text-center shadow-lg shadow-primary/10">
-        <Clock className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-        <span className="text-sm font-extrabold uppercase tracking-wider text-emphasis sm:text-base">
-          ¡Preventa válida hasta el {EARLY_BIRD_DEADLINE}!
-        </span>
+        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+          Tarifas regulares de inscripción oficial para el congreso.
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -117,15 +106,9 @@ export function PricingSection() {
                   <div className="mt-3 flex items-end justify-between gap-4">
                     <div>
                       <p className="font-serif text-2xl font-bold text-emphasis">
-                        {tier.earlySoles}
+                        {tier.soles}
                         <span className="ml-1.5 text-sm font-medium text-muted-foreground">
-                          / {tier.earlyUsd} USD
-                        </span>
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Regular:{' '}
-                        <span className="line-through">
-                          {tier.regularSoles} / {tier.regularUsd}
+                          / {tier.usd} USD
                         </span>
                       </p>
                     </div>
