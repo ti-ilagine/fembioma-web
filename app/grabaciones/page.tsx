@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, memo } from 'react'
-import { Lock, Play, AlertCircle, ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2 } from 'lucide-react'
+import { 
+  Lock, Play, Pause, Volume2, VolumeX, AlertCircle, 
+  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2 
+} from 'lucide-react'
 
 declare global {
   interface Window {
@@ -20,7 +23,7 @@ const PADRON_AUTORIZADO = [
 ]
 
 // ==========================================
-// 2. ESTRUCTURA DE JORNADAS, VIDEOS Y TIMESTAMPS
+// 2. ESTRUCTURA DE JORNADAS Y PONENCIAS
 // ==========================================
 export interface Ponencia {
   id: string
@@ -43,7 +46,7 @@ const JORNADAS_CONGRESO: Jornada[] = [
     diaId: 'dia-1',
     tituloJornada: 'Jornada Día 1',
     fechaTexto: 'Sábado 17 de Octubre, 2026',
-    youtubeId: 'wBDsgXBt6W0', // Video de 6h 12m
+    youtubeId: 'wBDsgXBt6W0',
     ponencias: [
       {
         id: 'd1-1',
@@ -107,7 +110,7 @@ const JORNADAS_CONGRESO: Jornada[] = [
     diaId: 'dia-2',
     tituloJornada: 'Jornada Día 2',
     fechaTexto: 'Domingo 18 de Octubre, 2026',
-    youtubeId: 'zDfIXmHDz0M', // Video de ~9 horas
+    youtubeId: 'zDfIXmHDz0M',
     ponencias: [
       {
         id: 'd2-1',
@@ -185,8 +188,15 @@ const timeToSeconds = (timeStr: string): number => {
   return 0
 }
 
+const formatSeconds = (totalSecs: number): string => {
+  const h = Math.floor(totalSecs / 3600)
+  const m = Math.floor((totalSecs % 3600) / 60)
+  const s = Math.floor(totalSecs % 60)
+  return `${h > 0 ? h + ':' : ''}${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`
+}
+
 // ==========================================
-// 3. COMPONENTE VISOR OPTIMIZADO (MEMORIZADO)
+// 3. VISOR CON PROTECCIÓN DE CAPA INVISIBLE
 // ==========================================
 interface VisorProps {
   usuario: { nombre: string; dni: string; codigo: string }
@@ -196,8 +206,13 @@ interface VisorProps {
 const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorProps) {
   const [jornadaSeleccionada, setJornadaSeleccionada] = useState<Jornada>(JORNADAS_CONGRESO[0])
   const [ponenciaActiva, setPonenciaActiva] = useState<Ponencia>(JORNADAS_CONGRESO[0].ponencias[0])
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+
   const playerRef = useRef<any>(null)
   const isReadyRef = useRef<boolean>(false)
+  const timerIntervalRef = useRef<any>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -210,6 +225,10 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
         playerVars: {
           rel: 0,
           modestbranding: 1,
+          controls: 0, // Ocultamos controles nativos para que no puedan usar el botón de YouTube
+          disablekb: 1, // Deshabilitar atajos de teclado que puedan abrir links
+          fs: 1,        // Permitir pantalla completa controlada
+          iv_load_policy: 3,
           enablejsapi: 1,
           origin: typeof window !== 'undefined' ? window.location.origin : ''
         },
@@ -220,6 +239,11 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             if (startSecs > 0) {
               event.target.seekTo(startSecs, true)
             }
+          },
+          onStateChange: (event: any) => {
+            // 1: Playing, 2: Paused
+            if (event.data === 1) setIsPlaying(true)
+            if (event.data === 2) setIsPlaying(false)
           }
         }
       })
@@ -233,15 +257,21 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
         tag.src = 'https://www.youtube.com/iframe_api'
         document.body.appendChild(tag)
       }
-      window.onYouTubeIframeAPIReady = () => {
-        initPlayer()
-      }
+      window.onYouTubeIframeAPIReady = () => initPlayer()
     } else {
       initPlayer()
     }
 
+    // Cronómetro para actualizar el tiempo actual
+    timerIntervalRef.current = setInterval(() => {
+      if (playerRef.current && isReadyRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+        setCurrentTime(Math.floor(playerRef.current.getCurrentTime()))
+      }
+    }, 1000)
+
     return () => {
       isMounted = false
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
       if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         playerRef.current.destroy()
         playerRef.current = null
@@ -270,6 +300,30 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
     if (playerRef.current && isReadyRef.current && typeof playerRef.current.seekTo === 'function') {
       playerRef.current.seekTo(segs, true)
       playerRef.current.playVideo()
+      setIsPlaying(true)
+    }
+  }
+
+  // Controles seguros propios
+  const togglePlay = () => {
+    if (!playerRef.current || !isReadyRef.current) return
+    if (isPlaying) {
+      playerRef.current.pauseVideo()
+      setIsPlaying(false)
+    } else {
+      playerRef.current.playVideo()
+      setIsPlaying(true)
+    }
+  }
+
+  const toggleMute = () => {
+    if (!playerRef.current || !isReadyRef.current) return
+    if (isMuted) {
+      playerRef.current.unMute()
+      setIsMuted(false)
+    } else {
+      playerRef.current.mute()
+      setIsMuted(true)
     }
   }
 
@@ -317,17 +371,73 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             ))}
           </div>
 
-          {/* Reproductor de YouTube */}
-          <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl">
-            <div id="yt-player-frame" className="w-full h-full" />
+          {/* ========================================================= */}
+          {/* REPRODUCTOR CON CAPAS INVISIBLES DE PROTECCIÓN (OVERLAYS) */}
+          {/* ========================================================= */}
+          <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl select-none">
+            {/* Contenedor Iframe YouTube */}
+            <div id="yt-player-frame" className="w-full h-full pointer-events-none" />
 
-            {/* Marca de agua flotante institucional */}
-            <div className="absolute top-3 right-3 z-20 pointer-events-none select-none bg-slate-950/85 backdrop-blur-sm border border-slate-700/50 px-3 py-1 rounded-md text-[10px] tracking-wide text-slate-300 font-mono shadow-sm">
+            {/* CAPA 1: Escudo Central Transparente (Clic simple hace Play/Pause; Bloquea menú contextual) */}
+            <div 
+              onClick={togglePlay}
+              onContextMenu={(e) => e.preventDefault()}
+              className="absolute inset-0 z-20 cursor-pointer bg-transparent"
+              title="Haz clic para reproducir o pausar"
+            />
+
+            {/* CAPA 2: Bloqueador Superior (Cubre zona de Título y Compartir de YouTube) */}
+            <div 
+              onContextMenu={(e) => e.preventDefault()}
+              className="absolute top-0 left-0 w-full h-16 z-30 pointer-events-auto bg-transparent cursor-pointer"
+              onClick={togglePlay}
+            />
+
+            {/* CAPA 3: Bloqueador Inferior Derecho (Cubre el logo "YouTube" y botones externos) */}
+            <div 
+              onContextMenu={(e) => e.preventDefault()}
+              className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer"
+              onClick={togglePlay}
+            />
+
+            {/* Marca de agua institucional inviolable */}
+            <div className="absolute top-3 right-3 z-30 pointer-events-none select-none bg-slate-950/85 backdrop-blur-sm border border-slate-700/50 px-3 py-1 rounded-md text-[10px] tracking-wide text-slate-300 font-mono shadow-sm">
               FEMBIOMA 2026 · Doc: {usuario.dni} · Acceso Personal
+            </div>
+
+            {/* BARRA DE CONTROLES PROPIA (Totalmente aislada de YouTube) */}
+            <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent p-3 flex items-center justify-between text-white">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={togglePlay}
+                  className="p-2 rounded-lg bg-[#f06d84] hover:bg-[#e05a72] transition-colors shadow-sm"
+                  aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
+                >
+                  {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                </button>
+
+                <button
+                  onClick={toggleMute}
+                  className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors"
+                  aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-slate-300" />}
+                </button>
+
+                <div className="text-xs font-mono text-slate-300">
+                  <span className="text-[#f06d84] font-semibold">{formatSeconds(currentTime)}</span>
+                  <span className="text-slate-500 mx-1">/</span>
+                  <span className="text-slate-400">{ponenciaActiva.duracion}</span>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-400 font-medium hidden sm:block">
+                Sesión: <span className="text-white">{ponenciaActiva.titulo.slice(0, 35)}...</span>
+              </div>
             </div>
           </div>
 
-          {/* Tarjeta de la ponencia en reproducción */}
+          {/* Ficha de la ponencia activa */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 rounded-full bg-[#f06d84]/15 text-[#f06d84] text-xs font-semibold uppercase flex items-center gap-1.5">
@@ -346,7 +456,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
         </div>
 
-        {/* Panel lateral con listado de ponencias y saltos */}
+        {/* Panel lateral con las sesiones */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
@@ -399,7 +509,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
 
           <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-400">
-            💡 Haz clic sobre cualquier ponencia para posicionar el video maestro en su minuto de inicio.
+            🔒 Los controles están protegidos dentro de la plataforma para garantizar la exclusividad del contenido.
           </div>
         </div>
       </main>
