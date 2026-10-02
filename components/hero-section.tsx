@@ -1,27 +1,3 @@
-En tu archivo `components/hero-section.tsx`, el único bloque que mantiene la preventa vencida es la caja de alerta superior:
-
-```tsx
-{/* Alerta Destacada de Preventa */}
-<div className="mb-6 inline-flex items-center gap-2.5 rounded-full border-2 border-primary bg-primary/15 px-5 py-2 text-xs font-extrabold uppercase tracking-wide text-emphasis shadow-lg shadow-primary/15 sm:text-sm">
-  <span className="relative flex h-3 w-3 shrink-0" aria-hidden="true">
-    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-    <span className="relative inline-flex h-3 w-3 rounded-full bg-primary" />
-  </span>
-  <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-  <span className="text-balance">
-    ¡Preventa hasta el 30 de Septiembre!
-  </span>
-</div>
-
-```
-
----
-
-### Código completo y limpio de `components/hero-section.tsx`
-
-Copia y reemplaza todo el archivo. Se retira el aviso de preventa y el efecto ping de cuenta regresiva, reemplazándolo por el indicador oficial de **Inscripciones Abiertas · Tarifa Regular**:
-
-```tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -158,5 +134,3 @@ export function HeroSection() {
     </section>
   )
 }
-
-```
