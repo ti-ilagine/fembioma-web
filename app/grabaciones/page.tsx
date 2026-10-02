@@ -20,7 +20,7 @@ const PADRON_AUTORIZADO = [
 ]
 
 // ==========================================
-// 2. ESTRUCTURA CON VIDEOS REALES Y TIMESTAMPS
+// 2. ESTRUCTURA DE JORNADAS, VIDEOS Y TIMESTAMPS
 // ==========================================
 export interface Ponencia {
   id: string
@@ -43,63 +43,63 @@ const JORNADAS_CONGRESO: Jornada[] = [
     diaId: 'dia-1',
     tituloJornada: 'Jornada Día 1',
     fechaTexto: 'Sábado 17 de Octubre, 2026',
-    youtubeId: 'wBDsgXBt6W0', // Video real de 6h 12m
+    youtubeId: 'wBDsgXBt6W0', // Video de 6h 12m
     ponencias: [
       {
         id: 'd1-1',
-        titulo: 'Apertura Institucional y Bienvenida Académica',
-        ponente: 'Dr. Aaron Benzhadón & Comité Organizador',
+        titulo: 'Apertura: Ecosistema de Salud Íntima Femenina y Nuevos Paradigmas',
+        ponente: 'Karwin Alcántara (Dirección de Eventos)',
         timestamp: '00:02:40',
-        duracion: '25 min'
+        duracion: '30 min'
       },
       {
         id: 'd1-2',
-        titulo: 'Gestión Estratégica en Salud y Modelos de Innovación',
-        ponente: 'Dr. Enrique Lao Cortés',
-        timestamp: '00:29:35',
-        duracion: '38 min'
+        titulo: 'Disbiosis Vaginal Recurrente y Restauración del Eje Lactobacillus',
+        ponente: 'Dra. Valerie Sánchez (Ginecología Funcional)',
+        timestamp: '00:30:15',
+        duracion: '45 min'
       },
       {
         id: 'd1-3',
-        titulo: 'Amiloidosis y Medicina de Precisión: Detección Multidisciplinaria',
-        ponente: 'Dr. José Nativi (Clínica Mayo)',
+        titulo: 'Gestión Integral y Calidad en Servicios de Ginecología Regenerativa',
+        ponente: 'Carlos Capcha (Auditoría Médica)',
         timestamp: '01:08:30',
-        duracion: '33 min'
+        duracion: '35 min'
       },
       {
         id: 'd1-4',
-        titulo: 'Terapias Inhaladas y Tecnologías de Formulación Avanzada',
-        ponente: 'Dr. Gustavo Ferrer González',
+        titulo: 'Terapia Tópica y Fórmulas Magistrales en Candidiasis Crónica',
+        ponente: 'Nancy Contreras (Especialista en Fórmulas Magistrales)',
         timestamp: '01:42:10',
-        duracion: '32 min'
+        duracion: '35 min'
       },
       {
         id: 'd1-5',
-        titulo: 'Mesa Redonda: Preguntas, Respuestas y Debate Clínico',
-        ponente: 'Panel de Especialistas Invitados',
+        titulo: 'Mesa de Discusión: Protocolos Clínicos de Diagnóstico Molecular Femenino',
+        ponente: 'Panel Moderado por Victoria Gutiérrez',
         timestamp: '02:14:30',
-        duracion: '25 min'
+        duracion: '30 min'
       },
       {
         id: 'd1-6',
-        titulo: 'Avances Críticos y Dispositivos de Apoyo Circulatorio',
-        ponente: 'Dr. José Nativi',
+        titulo: 'Innovación Tecnológica y Telemedicina en Ginecología de Precisión',
+        ponente: 'Ing. Marlon Molina (Sistemas y Proyectos TI)',
         timestamp: '03:31:45',
-        duracion: '33 min'
+        duracion: '40 min'
       },
       {
         id: 'd1-7',
-        titulo: 'Abordaje Quirúrgico y Selección de Pacientes de Alta Complejidad',
-        ponente: 'Dr. Julio César Granada (Cirugía de Tórax)',
+        titulo: 'Eje Intestino-Microbioma Femenino: Impacto en Síndrome Metabólico',
+        ponente: 'Adrián Díaz (Comité Científico)',
         timestamp: '04:06:20',
-        duracion: '39 min'
+        duracion: '45 min'
       },
       {
         id: 'd1-8',
-        titulo: 'Implementación de Programas de Excelencia y Conclusiones del Día 1',
-        ponente: 'Dr. Álvaro Quintero (Clínica CardioVID)',
+        titulo: 'Logística, Accesibilidad y Cumplimiento de Tratamientos Íntimos',
+        ponente: 'Leidy Meléndez (Gestión Administrativa y Clínica)',
         timestamp: '04:46:20',
-        duracion: '45 min'
+        duracion: '40 min'
       }
     ]
   },
@@ -111,66 +111,66 @@ const JORNADAS_CONGRESO: Jornada[] = [
     ponencias: [
       {
         id: 'd2-1',
-        titulo: 'Apertura de la Segunda Jornada y Balance Preliminar',
-        ponente: 'Dirección Médica del Congreso',
+        titulo: 'Bienvenida Jornada 2: Microbioma Vaginal y Medicina Reproductiva',
+        ponente: 'Karwin Alcántara',
         timestamp: '00:10:00',
-        duracion: '45 min'
-      },
-      {
-        id: 'd2-2',
-        titulo: 'Microbiota Vaginal y Terapia Restauradora de Precisión',
-        ponente: 'Dra. Patricia Sotomayor',
-        timestamp: '01:15:30',
-        duracion: '55 min'
-      },
-      {
-        id: 'd2-3',
-        titulo: 'Abordaje Terapéutico de la Disbiosis Recidivante',
-        ponente: 'Dra. María Elena Tapia',
-        timestamp: '02:30:00',
-        duracion: '60 min'
-      },
-      {
-        id: 'd2-4',
-        titulo: 'Protocolos de Aplicación Clínica con Ácido Bórico',
-        ponente: 'Dra. Juliana Gutiérrez',
-        timestamp: '03:45:00', // Timestamp solicitado previamente
         duracion: '50 min'
       },
       {
+        id: 'd2-2',
+        titulo: 'Manejo Terapéutico de Vaginosis Bacteriana Recidivante con Ácido Bórico',
+        ponente: 'Dra. Valerie Sánchez',
+        timestamp: '01:15:30',
+        duracion: '60 min'
+      },
+      {
+        id: 'd2-3',
+        titulo: 'Atención y Trazabilidad Asistencial en Teleconsultas de Salud Femenina',
+        ponente: 'Victoria Gutiérrez (Coordinación Asistencial)',
+        timestamp: '02:30:00',
+        duracion: '55 min'
+      },
+      {
+        id: 'd2-4',
+        titulo: 'Regulación del pH Vaginal y Barreras Fisiológicas en la Perimenopausia',
+        ponente: 'Adrián Díaz',
+        timestamp: '03:45:00',
+        duracion: '60 min'
+      },
+      {
         id: 'd2-5',
-        titulo: 'Simposio Central: Eje Intestino-Microbioma y Salud Hormonal',
-        ponente: 'Panel de Especialistas Internacionales',
+        titulo: 'Buenas Prácticas en Dispensación y Formulación Íntima para la Mujer',
+        ponente: 'Nancy Contreras',
         timestamp: '05:00:15',
         duracion: '65 min'
       },
       {
         id: 'd2-6',
-        titulo: 'Discusión de Casos Clínicos Complejos y Diagnóstico Molecular',
-        ponente: 'Dra. Valerie Cárdenas & Panel Quirúrgico',
+        titulo: 'Optimización de Procesos Financieros en Proyectos de Salud Femenina',
+        ponente: 'Ivonne Melgarejo (Finanzas & Tesorería)',
         timestamp: '06:15:40',
-        duracion: '50 min'
+        duracion: '45 min'
       },
       {
         id: 'd2-7',
-        titulo: 'Fórmulas Magistrales y Nuevas Guías de Tratamiento',
-        ponente: 'Comité Científico Fembioma',
+        titulo: 'Seguridad Digital y Resguardo de Datos Clínicos de Pacientes Ginecológicas',
+        ponente: 'Ing. Marlon Molina',
         timestamp: '07:10:00',
         duracion: '45 min'
       },
       {
         id: 'd2-8',
-        titulo: 'Revisión y Conclusiones del Bloque de la Tarde',
-        ponente: 'Mesa de Expertos Clínicos',
+        titulo: 'Supervisión de Calidad, Cumplimiento Normativo y Auditoría en Salud',
+        ponente: 'Carlos Capcha',
         timestamp: '08:00:20',
         duracion: '40 min'
       },
       {
         id: 'd2-9',
-        titulo: 'Clausura Oficial del Summit y Entrega de Certificaciones CMP',
-        ponente: 'Dr. Cristian Hidalgo Pajuelo',
+        titulo: 'Clausura Científica: Nuevas Directivas y Certificación Oficial CMP',
+        ponente: 'Leidy Meléndez & Dirección Médica',
         timestamp: '08:45:00',
-        duracion: '30 min'
+        duracion: '35 min'
       }
     ]
   }
@@ -186,7 +186,7 @@ const timeToSeconds = (timeStr: string): number => {
 }
 
 // ==========================================
-// 3. COMPONENTE VISOR OPTIMIZADO
+// 3. COMPONENTE VISOR OPTIMIZADO (MEMORIZADO)
 // ==========================================
 interface VisorProps {
   usuario: { nombre: string; dni: string; codigo: string }
@@ -297,6 +297,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-4">
+          {/* Pestañas de Jornada */}
           <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
             {JORNADAS_CONGRESO.map((jornada) => (
               <button
@@ -316,14 +317,17 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             ))}
           </div>
 
+          {/* Reproductor de YouTube */}
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl">
             <div id="yt-player-frame" className="w-full h-full" />
 
+            {/* Marca de agua flotante institucional */}
             <div className="absolute top-3 right-3 z-20 pointer-events-none select-none bg-slate-950/85 backdrop-blur-sm border border-slate-700/50 px-3 py-1 rounded-md text-[10px] tracking-wide text-slate-300 font-mono shadow-sm">
               FEMBIOMA 2026 · Doc: {usuario.dni} · Acceso Personal
             </div>
           </div>
 
+          {/* Tarjeta de la ponencia en reproducción */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 rounded-full bg-[#f06d84]/15 text-[#f06d84] text-xs font-semibold uppercase flex items-center gap-1.5">
@@ -342,6 +346,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
         </div>
 
+        {/* Panel lateral con listado de ponencias y saltos */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
@@ -394,7 +399,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
 
           <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-400">
-            💡 Haz clic en cualquier ponencia para posicionar el video maestro en su minuto de inicio.
+            💡 Haz clic sobre cualquier ponencia para posicionar el video maestro en su minuto de inicio.
           </div>
         </div>
       </main>
