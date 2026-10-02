@@ -20,7 +20,7 @@ const PADRON_AUTORIZADO = [
 ]
 
 // ==========================================
-// 2. ESTRUCTURA ESCALABLE DE JORNADAS Y PONENCIAS
+// 2. ESTRUCTURA CON VIDEOS REALES Y TIMESTAMPS
 // ==========================================
 export interface Ponencia {
   id: string
@@ -43,34 +43,62 @@ const JORNADAS_CONGRESO: Jornada[] = [
     diaId: 'dia-1',
     tituloJornada: 'Jornada Día 1',
     fechaTexto: 'Sábado 17 de Octubre, 2026',
-    youtubeId: 'M7lc1UVf-VE',
+    youtubeId: 'wBDsgXBt6W0', // Video real de 6h 12m
     ponencias: [
       {
-        id: 'p1-1',
-        titulo: 'Sesión Inaugural: Avances en Microbiota Vaginal y Diagnóstico Molecular',
-        ponente: 'Dr. Cristian Hidalgo Pajuelo',
-        timestamp: '00:15:30',
-        duracion: '50 min'
+        id: 'd1-1',
+        titulo: 'Apertura Institucional y Bienvenida Académica',
+        ponente: 'Dr. Aaron Benzhadón & Comité Organizador',
+        timestamp: '00:02:40',
+        duracion: '25 min'
       },
       {
-        id: 'p1-2',
-        titulo: 'Mesa Redonda: Abordaje Clínico y Terapéutico de la Disbiosis Recurrente',
-        ponente: 'Dra. María Elena Tapia (Panel de Gineco-Obstetricia)',
-        timestamp: '01:45:00',
-        duracion: '60 min'
+        id: 'd1-2',
+        titulo: 'Gestión Estratégica en Salud y Modelos de Innovación',
+        ponente: 'Dr. Enrique Lao Cortés',
+        timestamp: '00:29:35',
+        duracion: '38 min'
       },
       {
-        id: 'p1-3',
-        titulo: 'Interacción Eje Intestino-Vagina: Rol de los Probióticos de Precisión',
-        ponente: 'Dr. Roberto Mendoza (Expositor Internacional)',
-        timestamp: '03:20:15',
-        duracion: '55 min'
+        id: 'd1-3',
+        titulo: 'Amiloidosis y Medicina de Precisión: Detección Multidisciplinaria',
+        ponente: 'Dr. José Nativi (Clínica Mayo)',
+        timestamp: '01:08:30',
+        duracion: '33 min'
       },
       {
-        id: 'p1-4',
-        titulo: 'Protocolos de Aplicación Clínica de Ácido Bórico y Terapia Restauradora',
-        ponente: 'Comité Científico Fembioma',
-        timestamp: '05:10:45',
+        id: 'd1-4',
+        titulo: 'Terapias Inhaladas y Tecnologías de Formulación Avanzada',
+        ponente: 'Dr. Gustavo Ferrer González',
+        timestamp: '01:42:10',
+        duracion: '32 min'
+      },
+      {
+        id: 'd1-5',
+        titulo: 'Mesa Redonda: Preguntas, Respuestas y Debate Clínico',
+        ponente: 'Panel de Especialistas Invitados',
+        timestamp: '02:14:30',
+        duracion: '25 min'
+      },
+      {
+        id: 'd1-6',
+        titulo: 'Avances Críticos y Dispositivos de Apoyo Circulatorio',
+        ponente: 'Dr. José Nativi',
+        timestamp: '03:31:45',
+        duracion: '33 min'
+      },
+      {
+        id: 'd1-7',
+        titulo: 'Abordaje Quirúrgico y Selección de Pacientes de Alta Complejidad',
+        ponente: 'Dr. Julio César Granada (Cirugía de Tórax)',
+        timestamp: '04:06:20',
+        duracion: '39 min'
+      },
+      {
+        id: 'd1-8',
+        titulo: 'Implementación de Programas de Excelencia y Conclusiones del Día 1',
+        ponente: 'Dr. Álvaro Quintero (Clínica CardioVID)',
+        timestamp: '04:46:20',
         duracion: '45 min'
       }
     ]
@@ -79,35 +107,70 @@ const JORNADAS_CONGRESO: Jornada[] = [
     diaId: 'dia-2',
     tituloJornada: 'Jornada Día 2',
     fechaTexto: 'Domingo 18 de Octubre, 2026',
-    youtubeId: 'dQw4w9WgXcQ',
+    youtubeId: 'zDfIXmHDz0M', // Video de ~9 horas
     ponencias: [
       {
-        id: 'p2-1',
-        titulo: 'Medicina de Precisión en la Salud Femenina y Biomarcadores Avanzados',
+        id: 'd2-1',
+        titulo: 'Apertura de la Segunda Jornada y Balance Preliminar',
+        ponente: 'Dirección Médica del Congreso',
+        timestamp: '00:10:00',
+        duracion: '45 min'
+      },
+      {
+        id: 'd2-2',
+        titulo: 'Microbiota Vaginal y Terapia Restauradora de Precisión',
         ponente: 'Dra. Patricia Sotomayor',
-        timestamp: '00:30:00',
-        duracion: '50 min'
-      },
-      {
-        id: 'p2-2',
-        titulo: 'Terapia con Microbiota y Protocolos de Aplicación Personalizada',
-        ponente: 'Dra. Juliana Gutiérrez',
-        timestamp: '02:15:20',
-        duracion: '60 min'
-      },
-      {
-        id: 'p2-3',
-        titulo: 'Casos Clínicos Complejos: Manejo Integral en Pacientes Recidivantes',
-        ponente: 'Dra. Valerie Cárdenas & Panel Quirúrgico',
-        timestamp: '03:45:00',
+        timestamp: '01:15:30',
         duracion: '55 min'
       },
       {
-        id: 'p2-4',
-        titulo: 'Clausura Científica: Conclusiones, Certificación CMP y Nuevas Líneas',
-        ponente: 'Dr. Cristian Hidalgo Pajuelo (Dirección Médica)',
-        timestamp: '05:30:10',
+        id: 'd2-3',
+        titulo: 'Abordaje Terapéutico de la Disbiosis Recidivante',
+        ponente: 'Dra. María Elena Tapia',
+        timestamp: '02:30:00',
+        duracion: '60 min'
+      },
+      {
+        id: 'd2-4',
+        titulo: 'Protocolos de Aplicación Clínica con Ácido Bórico',
+        ponente: 'Dra. Juliana Gutiérrez',
+        timestamp: '03:45:00', // Timestamp solicitado previamente
+        duracion: '50 min'
+      },
+      {
+        id: 'd2-5',
+        titulo: 'Simposio Central: Eje Intestino-Microbioma y Salud Hormonal',
+        ponente: 'Panel de Especialistas Internacionales',
+        timestamp: '05:00:15',
+        duracion: '65 min'
+      },
+      {
+        id: 'd2-6',
+        titulo: 'Discusión de Casos Clínicos Complejos y Diagnóstico Molecular',
+        ponente: 'Dra. Valerie Cárdenas & Panel Quirúrgico',
+        timestamp: '06:15:40',
+        duracion: '50 min'
+      },
+      {
+        id: 'd2-7',
+        titulo: 'Fórmulas Magistrales y Nuevas Guías de Tratamiento',
+        ponente: 'Comité Científico Fembioma',
+        timestamp: '07:10:00',
+        duracion: '45 min'
+      },
+      {
+        id: 'd2-8',
+        titulo: 'Revisión y Conclusiones del Bloque de la Tarde',
+        ponente: 'Mesa de Expertos Clínicos',
+        timestamp: '08:00:20',
         duracion: '40 min'
+      },
+      {
+        id: 'd2-9',
+        titulo: 'Clausura Oficial del Summit y Entrega de Certificaciones CMP',
+        ponente: 'Dr. Cristian Hidalgo Pajuelo',
+        timestamp: '08:45:00',
+        duracion: '30 min'
       }
     ]
   }
@@ -123,7 +186,7 @@ const timeToSeconds = (timeStr: string): number => {
 }
 
 // ==========================================
-// COMPONENTE VISOR OPTIMIZADO (MEMORIZADO)
+// 3. COMPONENTE VISOR OPTIMIZADO
 // ==========================================
 interface VisorProps {
   usuario: { nombre: string; dni: string; codigo: string }
@@ -131,12 +194,11 @@ interface VisorProps {
 }
 
 const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorProps) {
-  const [jornadaSeleccionada, setJornadaSeleccionada] = useState<Jornada>(JORNADAS_CONGRESO[1])
-  const [ponenciaActiva, setPonenciaActiva] = useState<Ponencia>(JORNADAS_CONGRESO[1].ponencias[2])
+  const [jornadaSeleccionada, setJornadaSeleccionada] = useState<Jornada>(JORNADAS_CONGRESO[0])
+  const [ponenciaActiva, setPonenciaActiva] = useState<Ponencia>(JORNADAS_CONGRESO[0].ponencias[0])
   const playerRef = useRef<any>(null)
   const isReadyRef = useRef<boolean>(false)
 
-  // Carga e inicialización segura y limpia del iframe de YouTube
   useEffect(() => {
     let isMounted = true
 
@@ -293,14 +355,14 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             </span>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
             {jornadaSeleccionada.ponencias.map((p) => {
               const estaActiva = p.id === ponenciaActiva.id
               return (
                 <button
                   key={p.id}
                   onClick={() => handleSaltarAPonencia(p)}
-                  className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-start gap-3 ${
+                  className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
                     estaActiva
                       ? 'border-[#f06d84] bg-[#f06d84]/10 text-white shadow-sm'
                       : 'border-slate-800 hover:border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/50'
@@ -332,7 +394,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
 
           <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-400">
-            💡 Haz clic sobre cualquier ponencia para mover el reproductor al instante.
+            💡 Haz clic en cualquier ponencia para posicionar el video maestro en su minuto de inicio.
           </div>
         </div>
       </main>
@@ -341,7 +403,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
 })
 
 // ==========================================
-// PÁGINA PRINCIPAL Y AUTENTICACIÓN
+// 4. PÁGINA PRINCIPAL Y AUTENTICACIÓN
 // ==========================================
 export default function GrabacionesPage() {
   const [dni, setDni] = useState('')
