@@ -1,155 +1,137 @@
-import { Globe } from 'lucide-react'
+'use client'
 
-type Slot = { time: string; title: string; speaker?: string; country?: string }
+import { useState } from 'react'
+import { Calendar, Clock, User, Award, CheckCircle2 } from 'lucide-react'
 
-const days: { label: string; date: string; slots: Slot[] }[] = [
-  {
-    label: 'Día 1',
-    date: 'Microbioma y salud femenina',
-    slots: [
-      { time: '08:30', title: 'Acreditación y bienvenida' },
-      {
-        time: '09:00',
-        title: 'El microbioma vaginal como eje de la salud reproductiva',
-        speaker: 'Dra. Inmaculada Moreno',
-        country: 'España',
-      },
-      {
-        time: '10:30',
-        title: 'Disbiosis, inmunidad y enfermedades ginecológicas',
-        speaker: 'Dra. Annalisa Di Rocco',
-        country: 'Venezuela',
-      },
-      {
-        time: '12:00',
-        title: 'Microbiota intestinal y su impacto en la salud hormonal',
-        speaker: 'Dr. Christian Boggio Marzet',
-        country: 'Argentina',
-      },
-      {
-        time: '15:00',
-        title: 'Diagnóstico molecular del microbioma: casos clínicos',
-        speaker: 'Dr. Cristian Hidalgo Pajuelo',
-        country: 'Perú',
-      },
-      {
-        time: '16:30',
-        title: 'Nutrición y modulación de la microbiota femenina',
-        speaker: 'Ariadna López',
-        country: 'México',
-      },
-    ],
-  },
-  {
-    label: 'Día 2',
-    date: 'Diagnóstico, prevención y medicina de precisión',
-    slots: [
-      {
-        time: '09:00',
-        title: 'Biomarcadores y medicina de precisión femenina',
-        speaker: 'Dr. David Cotán',
-        country: 'España',
-      },
-      {
-        time: '10:30',
-        title: 'Nuevas terapias moduladoras del microbioma',
-        speaker: 'Dra. Sandra Condori',
-        country: 'Bélgica',
-      },
-      {
-        time: '12:00',
-        title: 'Prevención personalizada: del laboratorio a la consulta',
-        speaker: 'Dr. Fernando Losa',
-        country: 'España',
-      },
-      {
-        time: '15:00',
-        title: 'Abordaje clínico integral del eje intestino-vagina',
-        speaker: 'Dra. Verónica Morín',
-        country: 'Uruguay',
-      },
-      {
-        time: '16:30',
-        title: 'Mesa redonda internacional y conclusiones',
-        speaker: 'Panel de ponentes',
-        country: 'Internacional',
-      },
-      { time: '18:00', title: 'Cuestionario virtual y clausura' },
-    ],
-  },
+interface Sesion {
+  horario: string
+  titulo: string
+  ponente: string
+  pais?: string
+  moderador?: string
+  tipo?: 'conferencia' | 'break' | 'mesa'
+}
+
+const PROGRAMA_DIA_1: Sesion[] = [
+  { horario: '08:00 - 09:00', titulo: 'Mesa de Registro de Participantes', ponente: 'Comité Organizador', tipo: 'break' },
+  { horario: '09:00 - 09:20', titulo: 'Palabras de Bienvenida, Inauguración y Video de Apertura', ponente: 'Decano Colegio Médico del Perú', tipo: 'conferencia' },
+  { horario: '09:20 - 10:00', titulo: 'Conferencia Inaugural: El Futuro de la medicina femenina. Del microbioma a una nueva era de prevención, diagnóstico y medicina de precisión', ponente: 'Dra. Annalisa Di Rocco', pais: 'Venezuela', moderador: 'Dra. Allyson Montenegro', tipo: 'conferencia' },
+  { horario: '10:00 - 10:40', titulo: 'Lo que ocurre en el intestino, no se queda en el intestino. Bases del microbioma intestinal y su impacto sistémico', ponente: 'Dr. Marco Carvajal', pais: 'Perú', moderador: 'Dra. Allyson Montenegro', tipo: 'conferencia' },
+  { horario: '10:40 - 11:20', titulo: 'Microbioma en crecimiento: Interacciones entre microbioma, nutrición, inmunidad y desarrollo infantil', ponente: 'Dr. Roberto Somocursio', pais: 'Perú', moderador: 'Dra. Allyson Montenegro', tipo: 'conferencia' },
+  { horario: '11:20 - 11:50', titulo: 'Coffee Break', ponente: 'Espacio de Networking', tipo: 'break' },
+  { horario: '11:50 - 12:30', titulo: 'El ecosistema microbiano femenino. Microbioma vaginal y endometrial: Bases biológicas, homeostasis y factores moduladores', ponente: 'Dr. Cristian Hidalgo Pajuelo', pais: 'Perú', moderador: 'Dra. María Gracia Acosta', tipo: 'conferencia' },
+  { horario: '12:30 - 13:10', titulo: 'Transmisión Vertical Madre - Hijo: Influencia de la microbiota durante la gestación y parto', ponente: 'Dr. Juan Miguel Rodríguez Gómez', pais: 'España', moderador: 'Dra. María Gracia Acosta', tipo: 'conferencia' },
+  { horario: '13:10 - 14:40', titulo: 'Almuerzo Libre', ponente: 'Receso general', tipo: 'break' },
+  { horario: '14:40 - 15:20', titulo: 'Leche materna: Arquitecta del microbioma infantil y desarrollo del ecosistema intestinal del lactante', ponente: 'Dra. Beatriz Espin', pais: 'España', moderador: 'Dra. Yessica Quispe', tipo: 'conferencia' },
+  { horario: '15:20 - 16:00', titulo: 'Modulando el microbioma reproductivo: ¿Podemos mejorar los resultados reproductivos interviniendo sobre microbiota vaginal y endometrial?', ponente: 'Dra. Inmaculada Moreno', pais: 'España', moderador: 'Dra. Yessica Quispe', tipo: 'conferencia' },
+  { horario: '16:00 - 16:40', titulo: 'Nuevas herramientas y aplicaciones en el estudio del microbioma vaginal y endometrial', ponente: 'Dr. David Cotan', pais: 'España', moderador: 'Dra. Yessica Quispe', tipo: 'conferencia' },
+  { horario: '16:40 - 17:10', titulo: 'Coffee Break', ponente: 'Receso de tarde', tipo: 'break' },
+  { horario: '17:10 - 17:40', titulo: 'Nutrición en el microbioma femenino: ¿Cómo la alimentación modula el microbioma y sus metabolitos?', ponente: 'Nut. Ariadna López', pais: 'México', moderador: 'Dra. Karina Coricaza', tipo: 'conferencia' },
+  { horario: '17:40 - 18:10', titulo: 'Nutrición funcional, inflamación y metabolómica aplicada al microbioma', ponente: 'Lic. Yolanda Quintero', pais: 'México', moderador: 'Dra. Karina Coricaza', tipo: 'conferencia' },
+  { horario: '18:10 - 18:40', titulo: 'Suplementación como herramienta de modulación en el microbioma femenino', ponente: 'Dra. Miluska Montalvo', pais: 'Perú', moderador: 'Dra. Alesandra Huaquia', tipo: 'conferencia' },
+  { horario: '18:40 - 19:10', titulo: 'Implementación clínica de programas nutricionales para restaurar el microbioma femenino', ponente: 'Lic. Karla Custodio', pais: 'Perú', moderador: 'Dra. Alesandra Huaquia', tipo: 'conferencia' },
+  { horario: '19:10 - 19:50', titulo: 'Mesa Redonda: Nutrición, metabolismo y microbioma femenino. ¿Hasta dónde podemos modificar el microbioma a través de la nutrición?', ponente: 'Todos los ponentes del bloque', moderador: 'Dra. Alesandra Huaquia', tipo: 'mesa' },
 ]
 
-const countries = [
-  'Venezuela',
-  'Perú',
-  'España',
-  'Argentina',
-  'Bélgica',
-  'Uruguay',
-  'Colombia',
-  'México',
+const PROGRAMA_DIA_2: Sesion[] = [
+  { horario: '09:00 - 09:40', titulo: 'El microbioma en la menopausia: Hormonas, microbiota y transformación del ecosistema femenino', ponente: 'Dr. Fernando Losa', pais: 'España', moderador: 'Dra. Valerie Sánchez', tipo: 'conferencia' },
+  { horario: '09:40 - 10:20', titulo: 'El impacto de los antibióticos en la microbiota: Alteración intestinal y vaginal por uso innecesario', ponente: 'Dr. Christian Boggio Marzet', pais: 'Argentina', moderador: 'Dra. Valerie Sánchez', tipo: 'conferencia' },
+  { horario: '10:20 - 11:00', titulo: 'Estudio del microbioma vaginal en el mundo y en Perú (Proyecto Laura): ¿Qué hemos aprendido de más de 10 países?', ponente: 'Dra. Sandra Condori', pais: 'Bélgica', moderador: 'Dra. Liliana Díaz', tipo: 'conferencia' },
+  { horario: '11:00 - 11:30', titulo: 'Coffee Break', ponente: 'Espacio de Networking', tipo: 'break' },
+  { horario: '11:30 - 12:10', titulo: 'Infecciones urinarias y microbioma: El papel de la microbiota urinaria en la recurrencia', ponente: 'Dr. Cristian Hidalgo Pajuelo', pais: 'Perú', moderador: 'Dra. Liliana Díaz', tipo: 'conferencia' },
+  { horario: '12:10 - 12:50', titulo: 'Microbiota en la endometriosis: Rol de Lactobacillus, epigenética, fisiopatología y manejo clínico', ponente: 'Dra. Annalisa Di Rocco', pais: 'Venezuela', moderador: 'Dr. Juan Cunya', tipo: 'conferencia' },
+  { horario: '12:50 - 13:30', titulo: 'Infecciones vaginales: Candidiasis recurrente, biofilms, resistencia antimicótica y rol de Lactobacillus', ponente: 'Dr. Cristian Hidalgo Pajuelo', pais: 'Perú', moderador: 'Dr. Juan Cunya', tipo: 'conferencia' },
+  { horario: '13:30 - 15:00', titulo: 'Almuerzo Libre', ponente: 'Receso general', tipo: 'break' },
+  { horario: '15:00 - 15:40', titulo: 'Metabolismo del estrógeno y la microbiota: Estroboloma y patologías asociadas', ponente: 'Dra. Annalisa Di Rocco', pais: 'Venezuela', moderador: 'Dra. Sofía Saldaña', tipo: 'conferencia' },
+  { horario: '15:40 - 16:20', titulo: 'Salud emocional, estrés crónico y microbioma femenino', ponente: 'Dra. Verónica Morin', pais: 'Uruguay', moderador: 'Dra. Sofía Saldaña', tipo: 'conferencia' },
+  { horario: '16:20 - 17:00', titulo: 'Microbiota, inmunidad y hormonas: Primer diálogo en la vida', ponente: 'Dr. Fernando Medina', pais: 'Colombia', moderador: 'Lic. Marcela Ramos', tipo: 'conferencia' },
+  { horario: '17:00 - 17:30', titulo: 'Clausura Oficial del Summit y Entrega de Directivas Académicas', ponente: 'Comité Científico y Directivo', tipo: 'conferencia' },
 ]
 
 export function AgendaSection() {
+  const [diaActivo, setDiaActivo] = useState<1 | 2>(1)
+  const sesiones = diaActivo === 1 ? PROGRAMA_DIA_1 : PROGRAMA_DIA_2
+
   return (
-    <section id="agenda" className="bg-secondary/60 py-16 lg:py-24">
-      <div className="mx-auto max-w-6xl px-5 lg:px-8">
-        <div className="mx-auto mb-10 max-w-2xl text-center">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary">
-            Programa · 2 días
-          </p>
-          <h2 className="text-balance font-serif text-3xl font-semibold tracking-tight text-emphasis sm:text-4xl">
-            Agenda académica del congreso
-          </h2>
-          <p className="mt-4 text-pretty text-muted-foreground">
-            Ponentes internacionales de primer nivel compartiendo la evidencia más reciente.
-          </p>
-        </div>
+    <section id="agenda" className="mx-auto max-w-6xl px-5 py-16 lg:px-8 lg:py-24">
+      <div className="mx-auto mb-10 max-w-2xl text-center">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-emphasis text-xs font-semibold uppercase tracking-wider mb-3">
+          <Calendar className="w-3.5 h-3.5 text-primary" />
+          Programa Oficial Actualizado
+        </span>
+        <h2 className="text-balance font-serif text-3xl font-semibold tracking-tight text-emphasis sm:text-4xl">
+          Programa Científico y Académico
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          III Curso Internacional de Microbiota Vaginal & II Curso de Microbiota y Nutrición · 17 y 18 de Octubre
+        </p>
+      </div>
 
-        <div className="mb-10 flex flex-wrap items-center justify-center gap-2">
-          {countries.map((c) => (
-            <span
-              key={c}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium text-foreground"
-            >
-              <Globe className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-              {c}
-            </span>
-          ))}
-        </div>
+      {/* Selector de Días */}
+      <div className="flex justify-center gap-3 mb-10">
+        <button
+          onClick={() => setDiaActivo(1)}
+          className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+            diaActivo === 1
+              ? 'bg-[#f06d84] text-white shadow-lg shadow-[#f06d84]/25'
+              : 'bg-card border border-border text-muted-foreground hover:text-emphasis hover:bg-secondary'
+          }`}
+        >
+          Día 1 · Sábado 17 de Octubre
+        </button>
+        <button
+          onClick={() => setDiaActivo(2)}
+          className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+            diaActivo === 2
+              ? 'bg-[#f06d84] text-white shadow-lg shadow-[#f06d84]/25'
+              : 'bg-card border border-border text-muted-foreground hover:text-emphasis hover:bg-secondary'
+          }`}
+        >
+          Día 2 · Domingo 18 de Octubre
+        </button>
+      </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {days.map((day) => (
-            <div key={day.label} className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <div className="mb-6 border-b border-border pb-4">
-                <span className="font-serif text-2xl font-semibold text-emphasis">{day.label}</span>
-                <p className="mt-1 text-sm text-muted-foreground">{day.date}</p>
+      {/* Lista de Sesiones */}
+      <div className="space-y-3">
+        {sesiones.map((s, idx) => (
+          <div
+            key={idx}
+            className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              s.tipo === 'break'
+                ? 'bg-secondary/40 border-border/50 opacity-75'
+                : 'bg-card border-border hover:border-primary/40 hover:shadow-sm'
+            }`}
+          >
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-emphasis font-mono text-xs shrink-0 font-medium">
+                <Clock className="w-3.5 h-3.5 text-primary" />
+                {s.horario}
+              </span>
+              <div>
+                <h4 className="text-emphasis text-sm font-semibold leading-snug">{s.titulo}</h4>
+                {s.moderador && (
+                  <span className="text-[11px] text-muted-foreground block mt-0.5">
+                    Moderador: {s.moderador}
+                  </span>
+                )}
               </div>
-              <ol className="space-y-5">
-                {day.slots.map((slot, i) => (
-                  <li key={i} className="flex gap-4">
-                    <span className="shrink-0 pt-0.5 font-mono text-sm font-semibold tabular-nums text-primary">
-                      {slot.time}
-                    </span>
-                    <div>
-                      <p className="text-pretty text-sm font-medium leading-snug text-foreground">
-                        {slot.title}
-                      </p>
-                      {slot.speaker && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {slot.speaker}
-                          {slot.country && (
-                            <span className="text-primary"> · {slot.country}</span>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ol>
             </div>
-          ))}
-        </div>
+
+            {s.ponente && (
+              <div className="sm:text-right shrink-0 pl-11 sm:pl-0">
+                <p className="text-xs font-semibold text-emphasis flex items-center sm:justify-end gap-1.5">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                  {s.ponente}
+                </p>
+                {s.pais && (
+                  <span className="text-[11px] text-primary font-medium block">
+                    {s.pais}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   )
