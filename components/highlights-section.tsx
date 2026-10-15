@@ -66,9 +66,6 @@ export function HighlightsSection() {
             <span className="text-xs font-bold uppercase tracking-wider text-[#e0486c]">
               RESPALDO INSTITUCIONAL
             </span>
-            <h3 className="mt-1 font-serif text-2xl font-bold tracking-tight text-[#4a233b] dark:text-white">
-              Nuestros Auspiciadores
-            </h3>
           </div>
 
           <div className="rounded-3xl border border-[#f7a8bc] bg-white/90 dark:bg-slate-900/90 p-4 sm:p-8 shadow-sm">
