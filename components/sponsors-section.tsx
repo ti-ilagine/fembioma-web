@@ -12,10 +12,10 @@ export function SponsorsSection() {
         </h3>
       </div>
 
-      {/* Contenedor tipo cápsula con soporte responsivo para la imagen horizontal */}
       <div className="rounded-3xl border border-[#f7a8bc] bg-white/90 dark:bg-slate-900/90 p-4 sm:p-8 shadow-sm">
         <div className="w-full overflow-x-auto flex justify-center items-center py-2 scrollbar-thin">
           <div className="min-w-[580px] md:min-w-0 w-full max-w-4xl flex justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/auspicios.png"
               alt="Auspiciadores Oficiales FEMBIOMA World Summit 2026"
