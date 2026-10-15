@@ -1,6 +1,7 @@
 import { SiteHeader } from '@/components/site-header'
 import { HeroSection } from '@/components/hero-section'
 import { HighlightsSection } from '@/components/highlights-section'
+import { SponsorsSection } from '@/components/sponsors-section'
 import { AgendaSection } from '@/components/agenda-section'
 import { FacultySection } from '@/components/faculty-section'
 import { PricingSection } from '@/components/pricing-section'
@@ -12,6 +13,7 @@ export default function Page() {
       <SiteHeader />
       <HeroSection />
       <HighlightsSection />
+      <SponsorsSection />
       <AgendaSection />
       <FacultySection />
       <PricingSection />
