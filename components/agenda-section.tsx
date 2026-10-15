@@ -125,7 +125,7 @@ export function AgendaSection() {
       {/* Título de Sección */}
       <div className="mb-8">
         <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#e0486c] tracking-tight">
-          5. Programación
+          Agenda
         </h2>
       </div>
 
