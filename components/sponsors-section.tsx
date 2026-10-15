@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 export function SponsorsSection() {
   return (
     <section id="auspiciadores" className="py-10 px-4 sm:px-6 max-w-6xl mx-auto">
@@ -15,12 +17,13 @@ export function SponsorsSection() {
       <div className="rounded-3xl border border-[#f7a8bc] bg-white/90 dark:bg-slate-900/90 p-4 sm:p-8 shadow-sm">
         <div className="w-full overflow-x-auto flex justify-center items-center py-2 scrollbar-thin">
           <div className="min-w-[580px] md:min-w-0 w-full max-w-4xl flex justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="/auspicios.png"
               alt="Auspiciadores Oficiales FEMBIOMA World Summit 2026"
+              width={1200}
+              height={300}
+              unoptimized
               className="w-full h-auto object-contain max-h-[140px] sm:max-h-[180px] select-none"
-              loading="lazy"
             />
           </div>
         </div>
