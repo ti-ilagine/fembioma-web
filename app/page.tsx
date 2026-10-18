@@ -5,6 +5,7 @@ import { AgendaSection } from '@/components/agenda-section'
 import { FacultySection } from '@/components/faculty-section'
 import { PricingSection } from '@/components/pricing-section'
 import { FooterCTA } from '@/components/footer-cta'
+import { SociedadModal } from '@/components/sociedad-modal'
 
 export default function Page() {
   return (
@@ -16,6 +17,9 @@ export default function Page() {
       <FacultySection />
       <PricingSection />
       <FooterCTA />
+
+      {/* Pop-up de convocatoria para la Sociedad Peruana de Microbioma */}
+      <SociedadModal />
     </main>
   )
 }
