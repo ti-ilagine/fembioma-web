@@ -561,7 +561,7 @@ export default function GrabacionesPage() {
 
               <div className="mt-6 pt-6 border-t border-slate-800 text-center">
                 <p className="text-[11px] text-slate-500">
-                  ¿Problemas con tu acceso? Contáctanos a <span className="text-slate-400">contacto@fembioma.com</span>
+                  ¿Problemas con tu acceso? Contáctanos a <span className="text-slate-400">eventos@fembioma.com</span>
                 </p>
               </div>
             </form>
