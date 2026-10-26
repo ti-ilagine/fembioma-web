@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 
-// ID de tu Google Sheet en Drive
 const GOOGLE_SHEET_CSV_URL =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQNWTpkltiWMMuq8H2Ztys4TP0OVzFGO9VJx9zGvo7rW-w6G5EG_cOCtRdBRCmVS_2bsUePFp0oL_vT/pub?output=csv'
+  'https://docs.google.com/spreadsheets/d/1qNavyUFLKn1su08dgGarUc4-Y6I7iJfW_MlDi_XL4lo/export?format=csv'
 
-export const runtime = 'edge' // Óptimo para Cloudflare Pages
+export const runtime = 'edge'
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +11,7 @@ export async function POST(request: Request) {
 
     if (!correo || !codigo) {
       return NextResponse.json(
-        { valido: false, error: 'Correo y código son obligatorios.' },
+        { valido: false, error: 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.' },
         { status: 400 }
       )
     }
@@ -20,19 +19,18 @@ export async function POST(request: Request) {
     const correoBuscado = String(correo).trim().toLowerCase()
     const codigoBuscado = String(codigo).trim().toUpperCase()
 
-    // Si usan la clave maestra de emergencia de TI/Dirección
+    // Acceso administrativo de emergencia
     if (codigoBuscado === 'FEM26') {
-      return NextResponse.json({ valido: true, correo: correoBuscado })
+      return NextResponse.json({ valido: true, correo: correoBuscado, nombre: 'Equipo de Coordinación' })
     }
 
-    // Consulta en vivo a la hoja de Google Sheets (con revalidación corta de 60 segundos)
     const response = await fetch(GOOGLE_SHEET_CSV_URL, {
       next: { revalidate: 60 }
     })
 
     if (!response.ok) {
       return NextResponse.json(
-        { valido: false, error: 'No se pudo conectar con el padrón oficial.' },
+        { valido: false, error: 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.' },
         { status: 502 }
       )
     }
@@ -40,38 +38,43 @@ export async function POST(request: Request) {
     const csvText = await response.text()
     const filas = csvText.split('\n')
 
-    // Recorremos las filas del CSV en busca de coincidencia
     let usuarioEncontrado = false
+    let nombreParticipante = ''
 
     for (let i = 1; i < filas.length; i++) {
       const fila = filas[i].trim()
       if (!fila) continue
 
-      // Separar columnas respetando posibles comillas
       const columnas = fila.split(',')
       if (columnas.length < 4) continue
 
-      // Estructura: NOMBRE (0), DOCUMENTO (1), CORREO_REGISTRADO (2), CODIGO_ACCESO (3)
+      // Columnas: NOMBRE (0), DOCUMENTO (1), CORREO_REGISTRADO (2), CODIGO_ACCESO (3)
+      const nombreFila = columnas[0].replace(/"/g, '').trim()
       const correoFila = columnas[2].replace(/"/g, '').trim().toLowerCase()
       const codigoFila = columnas[3].replace(/"/g, '').trim().toUpperCase()
 
       if (correoFila === correoBuscado && codigoFila === codigoBuscado) {
         usuarioEncontrado = true
+        nombreParticipante = nombreFila
         break
       }
     }
 
     if (usuarioEncontrado) {
-      return NextResponse.json({ valido: true, correo: correoBuscado })
+      return NextResponse.json({ 
+        valido: true, 
+        correo: correoBuscado,
+        nombre: nombreParticipante || correoBuscado
+      })
     }
 
     return NextResponse.json(
-      { valido: false, error: 'El correo o el código de acceso no figuran en el padrón oficial.' },
+      { valido: false, error: 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.' },
       { status: 401 }
     )
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { valido: false, error: 'Error interno validando credenciales.' },
+      { valido: false, error: 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.' },
       { status: 500 }
     )
   }
