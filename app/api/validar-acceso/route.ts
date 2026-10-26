@@ -19,13 +19,22 @@ export async function POST(request: Request) {
     const correoBuscado = String(correo).trim().toLowerCase()
     const codigoBuscado = String(codigo).trim().toUpperCase()
 
-    // Acceso administrativo de emergencia
+    // Comodín administrativo de TI
     if (codigoBuscado === 'FEM26') {
-      return NextResponse.json({ valido: true, correo: correoBuscado, nombre: 'Equipo de Coordinación' })
+      return NextResponse.json({ valido: true, correo: correoBuscado, nombre: 'Coordinación FEMBIOMA' })
     }
 
+    // Tolerancia especial directa para Dr. Cristian y Marlon
+    if (correoBuscado === 'cristian.hidalgo@ilagine.com' && (codigoBuscado === 'F82MA' || codigoBuscado === 'VKRZG')) {
+      return NextResponse.json({ valido: true, correo: correoBuscado, nombre: 'Dr. Cristian Hidalgo Pajuelo' })
+    }
+    if (correoBuscado === 'marlon@domoy.pe' && codigoBuscado === 'M442K') {
+      return NextResponse.json({ valido: true, correo: correoBuscado, nombre: 'Marlon Molina Hidalgo' })
+    }
+
+    // Consulta en vivo al Google Sheet
     const response = await fetch(GOOGLE_SHEET_CSV_URL, {
-      next: { revalidate: 60 }
+      next: { revalidate: 30 }
     })
 
     if (!response.ok) {
@@ -48,7 +57,6 @@ export async function POST(request: Request) {
       const columnas = fila.split(',')
       if (columnas.length < 4) continue
 
-      // Columnas: NOMBRE (0), DOCUMENTO (1), CORREO_REGISTRADO (2), CODIGO_ACCESO (3)
       const nombreFila = columnas[0].replace(/"/g, '').trim()
       const correoFila = columnas[2].replace(/"/g, '').trim().toLowerCase()
       const codigoFila = columnas[3].replace(/"/g, '').trim().toUpperCase()
