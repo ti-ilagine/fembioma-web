@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, memo } from 'react'
 import { 
-  Lock, Play, Pause, Volume2, VolumeX, AlertCircle, 
-  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, Mail, Loader2 
+  Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
+  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, Mail, Loader2, Sparkles 
 } from 'lucide-react'
 
 declare global {
@@ -13,9 +13,6 @@ declare global {
   }
 }
 
-// ==========================================
-// 1. ESTRUCTURA DE JORNADAS Y PONENCIAS REALES
-// ==========================================
 export interface Ponencia {
   id: string
   titulo: string
@@ -89,20 +86,18 @@ const formatSeconds = (totalSecs: number): string => {
   return `${h > 0 ? h + ':' : ''}${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`
 }
 
-// ==========================================
-// 2. VISOR CON PROTECCIÓN DE CAPA INVISIBLE
-// ==========================================
 interface VisorProps {
-  correoUsuario: string
+  usuario: { correo: string; nombre: string }
   onLogout: () => void
 }
 
-const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: VisorProps) {
+const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorProps) {
   const [jornadaSeleccionada, setJornadaSeleccionada] = useState<Jornada>(JORNADAS_CONGRESO[0])
   const [ponenciaActiva, setPonenciaActiva] = useState<Ponencia>(JORNADAS_CONGRESO[0].ponencias[0])
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
 
   const playerRef = useRef<any>(null)
   const isReadyRef = useRef<boolean>(false)
@@ -129,10 +124,9 @@ const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: V
         events: {
           onReady: (event: any) => {
             isReadyRef.current = true
+            setDuration(Math.floor(event.target.getDuration() || 0))
             const startSecs = timeToSeconds(ponenciaActiva.timestamp)
-            if (startSecs > 0) {
-              event.target.seekTo(startSecs, true)
-            }
+            if (startSecs > 0) event.target.seekTo(startSecs, true)
           },
           onStateChange: (event: any) => {
             if (event.data === 1) setIsPlaying(true)
@@ -157,7 +151,10 @@ const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: V
 
     timerIntervalRef.current = setInterval(() => {
       if (playerRef.current && isReadyRef.current && typeof playerRef.current.getCurrentTime === 'function') {
-        setCurrentTime(Math.floor(playerRef.current.getCurrentTime()))
+        const cur = Math.floor(playerRef.current.getCurrentTime())
+        setCurrentTime(cur)
+        const dur = Math.floor(playerRef.current.getDuration() || 0)
+        if (dur > 0 && dur !== duration) setDuration(dur)
       }
     }, 1000)
 
@@ -218,22 +215,32 @@ const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: V
     }
   }
 
+  const handleSeekSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nuevoSegundo = Number(e.target.value)
+    setCurrentTime(nuevoSegundo)
+    if (playerRef.current && isReadyRef.current && typeof playerRef.current.seekTo === 'function') {
+      playerRef.current.seekTo(nuevoSegundo, true)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <div>
-            <h2 className="text-sm font-semibold text-white">Grabaciones FEMBIOMA World Summit 2026</h2>
-            <p className="text-xs text-slate-400">
-              Sesión activa: <span className="text-[#f06d84] font-medium">{correoUsuario}</span>
-            </p>
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <h2 className="text-xs sm:text-sm font-semibold tracking-wide uppercase text-slate-300">
+              FEMBIOMA World Summit 2026 · Sesión Activa: <span className="text-white font-mono">{usuario.correo}</span>
+            </h2>
           </div>
+          <h1 className="text-lg sm:text-2xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-fuchsia-300 to-amber-200 mt-0.5">
+            ¡Bienvenido(a), {usuario.nombre}!
+          </h1>
         </div>
 
         <button
           onClick={onLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 text-xs transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 text-xs transition-colors shrink-0"
         >
           <LogOut className="w-3.5 h-3.5" />
           Salir
@@ -242,7 +249,6 @@ const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: V
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-4">
-          {/* Pestañas de Jornada */}
           <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
             {JORNADAS_CONGRESO.map((jornada) => (
               <button
@@ -262,57 +268,88 @@ const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: V
             ))}
           </div>
 
-          {/* REPRODUCTOR CON CAPAS PROTECTORAS */}
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl select-none">
             <div id="yt-player-frame" className="w-full h-full pointer-events-none" />
 
-            <div onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} className="absolute inset-0 z-20 cursor-pointer bg-transparent" title="Haz clic para reproducir o pausar" />
-            <div onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} className="absolute top-0 left-0 w-full h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" />
-            <div onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" />
+            <div 
+              onClick={togglePlay} 
+              onContextMenu={(e) => e.preventDefault()} 
+              className="absolute inset-0 z-20 cursor-pointer bg-transparent" 
+            />
 
-            {/* Marca de agua institucional */}
-            <div className="absolute top-3 right-3 z-30 pointer-events-none select-none bg-slate-950/85 backdrop-blur-sm border border-slate-700/50 px-3 py-1 rounded-md text-[10px] tracking-wide text-slate-300 font-mono shadow-sm">
-              FEMBIOMA 2026 · {correoUsuario}
+            {/* Barra superior institucional opaca */}
+            <div 
+              onContextMenu={(e) => e.preventDefault()} 
+              className="absolute top-0 left-0 w-full h-14 z-30 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent px-4 flex items-center justify-between pointer-events-auto"
+            >
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-rose-500" />
+                <span className="font-serif text-xs sm:text-sm font-bold tracking-widest uppercase text-white drop-shadow">
+                  FEMBIOMA WORLD SUMMIT 2026
+                </span>
+              </div>
+              <div className="select-none bg-slate-900/90 border border-slate-700/60 px-2.5 py-1 rounded text-[10px] tracking-wide text-slate-300 font-mono">
+                {usuario.correo}
+              </div>
             </div>
 
-            {/* Controles propios */}
-            <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent p-3 flex items-center justify-between text-white">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={togglePlay}
-                  className="p-2 rounded-lg bg-[#f06d84] hover:bg-[#e05a72] transition-colors shadow-sm"
-                  aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-                >
-                  {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                </button>
+            {/* Bloqueador del logo de YouTube */}
+            <div 
+              onClick={togglePlay} 
+              onContextMenu={(e) => e.preventDefault()} 
+              className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" 
+            />
 
-                <button
-                  onClick={toggleMute}
-                  className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors"
-                  aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-slate-300" />}
-                </button>
-
-                <div className="text-xs font-mono text-slate-300">
-                  <span className="text-[#f06d84] font-semibold">{formatSeconds(currentTime)}</span>
-                  <span className="text-slate-500 mx-1">/</span>
-                  <span className="text-slate-400">{ponenciaActiva.duracion}</span>
-                </div>
+            {/* Controles de reproducción y barra de tiempo libre */}
+            <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent p-3 pt-6 flex flex-col gap-2 text-white">
+              <div className="flex items-center gap-2 w-full">
+                <span className="text-[11px] font-mono text-rose-400 shrink-0 font-medium w-14 text-right">
+                  {formatSeconds(currentTime)}
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 100}
+                  value={currentTime}
+                  onChange={handleSeekSlider}
+                  className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#f06d84]"
+                />
+                <span className="text-[11px] font-mono text-slate-400 shrink-0 font-medium w-14">
+                  {formatSeconds(duration)}
+                </span>
               </div>
 
-              <div className="text-[11px] text-slate-400 font-medium hidden sm:block">
-                Sesión: <span className="text-white">{ponenciaActiva.titulo.slice(0, 35)}...</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={togglePlay}
+                    className="p-2 rounded-lg bg-[#f06d84] hover:bg-[#e05a72] transition-colors shadow-sm"
+                    aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                  </button>
+
+                  <button
+                    onClick={toggleMute}
+                    className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors"
+                    aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-slate-300" />}
+                  </button>
+                </div>
+
+                <div className="text-[11px] text-slate-300 font-medium truncate max-w-[280px] sm:max-w-md">
+                  Sesión: <span className="text-white font-semibold">{ponenciaActiva.titulo}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Ficha de la ponencia activa */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 rounded-full bg-[#f06d84]/15 text-[#f06d84] text-xs font-semibold uppercase flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Inicio: {ponenciaActiva.timestamp}
+                Inicio en video: {ponenciaActiva.timestamp}
               </span>
               <span className="text-xs text-slate-400">· Duración estimada: {ponenciaActiva.duracion}</span>
             </div>
@@ -326,7 +363,6 @@ const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: V
           </div>
         </div>
 
-        {/* Panel lateral con minutero interactivo */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
@@ -387,23 +423,27 @@ const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: V
   )
 })
 
-// ==========================================
-// 3. PÁGINA PRINCIPAL Y AUTENTICACIÓN DINÁMICA
-// ==========================================
 export default function GrabacionesPage() {
   const [correo, setCorreo] = useState('')
-  const [codigoAcceso, setCodigoAcceso] = useState('')
+  const [codigoReal, setCodigoReal] = useState('')
+  const [codigoDisplay, setCodigoDisplay] = useState('')
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
-  const [usuarioAutenticado, setUsuarioAutenticado] = useState<string | null>(null)
+  const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ correo: string; nombre: string } | null>(null)
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
+
+  const maskTimeoutRef = useRef<any>(null)
 
   useEffect(() => {
     if (new Date() > FECHA_LIMITE) setTiempoExpirado(true)
 
-    const sesion = sessionStorage.getItem('fembioma_user_email')
+    const sesion = sessionStorage.getItem('fembioma_user')
     if (sesion) {
-      setUsuarioAutenticado(sesion)
+      try {
+        setUsuarioAutenticado(JSON.parse(sesion))
+      } catch {
+        sessionStorage.removeItem('fembioma_user')
+      }
     }
 
     const handleContextMenu = (e: MouseEvent) => e.preventDefault()
@@ -425,6 +465,34 @@ export default function GrabacionesPage() {
     }
   }, [])
 
+  const handleCodigoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value.toUpperCase()
+
+    if (rawVal.length < codigoReal.length) {
+      const diff = codigoReal.length - rawVal.length
+      const updatedReal = codigoReal.slice(0, -diff)
+      setCodigoReal(updatedReal)
+      setCodigoDisplay('•'.repeat(updatedReal.length))
+      return
+    }
+
+    if (codigoReal.length >= 5) return
+
+    const ultimoChar = rawVal.slice(-1)
+    if (!/[A-Z0-9]/.test(ultimoChar)) return
+
+    const updatedReal = (codigoReal + ultimoChar).slice(0, 5)
+    setCodigoReal(updatedReal)
+
+    const maskedPart = '•'.repeat(Math.max(0, updatedReal.length - 1))
+    setCodigoDisplay(maskedPart + ultimoChar)
+
+    if (maskTimeoutRef.current) clearTimeout(maskTimeoutRef.current)
+    maskTimeoutRef.current = setTimeout(() => {
+      setCodigoDisplay('•'.repeat(updatedReal.length))
+    }, 800)
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -436,37 +504,39 @@ export default function GrabacionesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           correo: correo.trim().toLowerCase(),
-          codigo: codigoAcceso.trim().toUpperCase(),
+          codigo: codigoReal.trim().toUpperCase(),
         }),
       })
 
       const data = await res.json()
 
       if (res.ok && data.valido) {
-        setUsuarioAutenticado(data.correo)
-        sessionStorage.setItem('fembioma_user_email', data.correo)
+        const payload = { correo: data.correo, nombre: data.nombre }
+        setUsuarioAutenticado(payload)
+        sessionStorage.setItem('fembioma_user', JSON.stringify(payload))
       } else {
-        setError(data.error || 'Credenciales incorrectas en el padrón.')
+        setError(data.error || 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
       }
     } catch {
-      setError('Error al conectar con el servidor de validación. Inténtalo nuevamente.')
+      setError('El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
     } finally {
       setCargando(false)
     }
   }
 
   const handleLogout = () => {
-    sessionStorage.removeItem('fembioma_user_email')
+    sessionStorage.removeItem('fembioma_user')
     setUsuarioAutenticado(null)
     setCorreo('')
-    setCodigoAcceso('')
+    setCodigoReal('')
+    setCodigoDisplay('')
   }
 
   if (tiempoExpirado) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl">
-          <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
           <h1 className="text-2xl font-serif font-bold text-white mb-2">Acceso Finalizado</h1>
           <p className="text-sm text-slate-400">
             El periodo oficial para la visualización de las grabaciones del FEMBIOMA World Summit 2026 ha concluido.
@@ -497,10 +567,11 @@ export default function GrabacionesPage() {
               onSubmit={handleLogin}
               className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md"
             >
+              {/* Alerta en contraste ámbar/naranja visible */}
               {error && (
-                <div className="mb-6 p-4 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-3 text-red-300 text-xs">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
-                  <span>{error}</span>
+                <div className="mb-6 p-4 rounded-xl border-2 border-amber-500/70 bg-amber-950/40 flex items-start gap-3 text-amber-200 text-xs shadow-lg">
+                  <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
+                  <span className="leading-relaxed font-medium">{error}</span>
                 </div>
               )}
 
@@ -530,11 +601,11 @@ export default function GrabacionesPage() {
                     <input
                       type="text"
                       required
-                      maxLength={5}
-                      value={codigoAcceso}
-                      onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
+                      value={codigoDisplay}
+                      onChange={handleCodigoChange}
                       placeholder="Ej. CS9TG"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
+                      autoComplete="off"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm tracking-widest font-mono text-center font-bold"
                     />
                     <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
@@ -568,7 +639,7 @@ export default function GrabacionesPage() {
           </div>
         </div>
       ) : (
-        <VisorSesiones correoUsuario={usuarioAutenticado} onLogout={handleLogout} />
+        <VisorSesiones usuario={usuarioAutenticado} onLogout={handleLogout} />
       )}
     </div>
   )
