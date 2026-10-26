@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { 
   Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
-  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, Mail, Loader2, Sparkles 
+  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, Mail, Loader2, Eye, EyeOff 
 } from 'lucide-react'
 
 declare global {
@@ -300,7 +300,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
               className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" 
             />
 
-            {/* Controles de reproducción y barra de tiempo libre */}
+            {/* Controles de reproducción con scrubber libre */}
             <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent p-3 pt-6 flex flex-col gap-2 text-white">
               <div className="flex items-center gap-2 w-full">
                 <span className="text-[11px] font-mono text-rose-400 shrink-0 font-medium w-14 text-right">
@@ -425,14 +425,12 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
 
 export default function GrabacionesPage() {
   const [correo, setCorreo] = useState('')
-  const [codigoReal, setCodigoReal] = useState('')
-  const [codigoDisplay, setCodigoDisplay] = useState('')
+  const [codigoAcceso, setCodigoAcceso] = useState('')
+  const [mostrarCodigo, setMostrarCodigo] = useState(false)
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
   const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ correo: string; nombre: string } | null>(null)
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
-
-  const maskTimeoutRef = useRef<any>(null)
 
   useEffect(() => {
     if (new Date() > FECHA_LIMITE) setTiempoExpirado(true)
@@ -465,34 +463,6 @@ export default function GrabacionesPage() {
     }
   }, [])
 
-  const handleCodigoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawVal = e.target.value.toUpperCase()
-
-    if (rawVal.length < codigoReal.length) {
-      const diff = codigoReal.length - rawVal.length
-      const updatedReal = codigoReal.slice(0, -diff)
-      setCodigoReal(updatedReal)
-      setCodigoDisplay('•'.repeat(updatedReal.length))
-      return
-    }
-
-    if (codigoReal.length >= 5) return
-
-    const ultimoChar = rawVal.slice(-1)
-    if (!/[A-Z0-9]/.test(ultimoChar)) return
-
-    const updatedReal = (codigoReal + ultimoChar).slice(0, 5)
-    setCodigoReal(updatedReal)
-
-    const maskedPart = '•'.repeat(Math.max(0, updatedReal.length - 1))
-    setCodigoDisplay(maskedPart + ultimoChar)
-
-    if (maskTimeoutRef.current) clearTimeout(maskTimeoutRef.current)
-    maskTimeoutRef.current = setTimeout(() => {
-      setCodigoDisplay('•'.repeat(updatedReal.length))
-    }, 800)
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -504,7 +474,7 @@ export default function GrabacionesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           correo: correo.trim().toLowerCase(),
-          codigo: codigoReal.trim().toUpperCase(),
+          codigo: codigoAcceso.trim().toUpperCase(),
         }),
       })
 
@@ -528,8 +498,7 @@ export default function GrabacionesPage() {
     sessionStorage.removeItem('fembioma_user')
     setUsuarioAutenticado(null)
     setCorreo('')
-    setCodigoReal('')
-    setCodigoDisplay('')
+    setCodigoAcceso('')
   }
 
   if (tiempoExpirado) {
@@ -599,15 +568,24 @@ export default function GrabacionesPage() {
                   </label>
                   <div className="relative">
                     <input
-                      type="text"
+                      type={mostrarCodigo ? 'text' : 'password'}
                       required
-                      value={codigoDisplay}
-                      onChange={handleCodigoChange}
+                      maxLength={5}
+                      value={codigoAcceso}
+                      onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
                       placeholder="Ej. CS9TG"
                       autoComplete="off"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm tracking-widest font-mono text-center font-bold"
+                      className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
                     />
                     <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <button
+                      type="button"
+                      onClick={() => setMostrarCodigo(!mostrarCodigo)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                      tabIndex={-1}
+                    >
+                      {mostrarCodigo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
