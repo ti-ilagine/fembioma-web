@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 // ID de tu Google Sheet en Drive
 const GOOGLE_SHEET_CSV_URL =
-  'https://docs.google.com/spreadsheets/d/1qNavyUFLKn1su08dgGarUc4-Y6I7iJfW_MlDi_XL4lo/export?format=csv'
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQNWTpkltiWMMuq8H2Ztys4TP0OVzFGO9VJx9zGvo7rW-w6G5EG_cOCtRdBRCmVS_2bsUePFp0oL_vT/pub?output=csv'
 
 export const runtime = 'edge' // Óptimo para Cloudflare Pages
 
