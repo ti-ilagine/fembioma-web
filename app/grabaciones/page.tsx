@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { 
   Lock, Play, Pause, Volume2, VolumeX, AlertCircle, 
-  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2 
+  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, Mail, Loader2 
 } from 'lucide-react'
 
 declare global {
@@ -14,16 +14,7 @@ declare global {
 }
 
 // ==========================================
-// 1. PADRÓN DE PARTICIPANTES
-// ==========================================
-const PADRON_AUTORIZADO = [
-  { dni: '44073684', correo: 'marlon@domoy.pe', codigo: 'FEM-2026-M44', nombre: 'Marlon Molina' },
-  { dni: '12345678', correo: 'karwin@ilagine.com', codigo: 'FEM-VIP-2026', nombre: 'Karwin Alcántara' },
-  { dni: '87654321', correo: 'doctor@fembioma.com', codigo: 'DOC-FEM-001', nombre: 'Médico Participante' }
-]
-
-// ==========================================
-// 2. ESTRUCTURA DE JORNADAS Y PONENCIAS
+// 1. ESTRUCTURA DE JORNADAS Y PONENCIAS REALES
 // ==========================================
 export interface Ponencia {
   id: string
@@ -46,135 +37,38 @@ const JORNADAS_CONGRESO: Jornada[] = [
     diaId: 'dia-1',
     tituloJornada: 'Jornada Día 1',
     fechaTexto: 'Sábado 17 de Octubre, 2026',
-    youtubeId: 'wBDsgXBt6W0',
+    youtubeId: 'uqLtZg3Hhlk',
     ponencias: [
-      {
-        id: 'd1-1',
-        titulo: 'Apertura: Ecosistema de Salud Íntima Femenina y Nuevos Paradigmas',
-        ponente: 'Karwin Alcántara (Dirección de Eventos)',
-        timestamp: '00:02:40',
-        duracion: '30 min'
-      },
-      {
-        id: 'd1-2',
-        titulo: 'Disbiosis Vaginal Recurrente y Restauración del Eje Lactobacillus',
-        ponente: 'Dra. Valerie Sánchez (Ginecología Funcional)',
-        timestamp: '00:30:15',
-        duracion: '45 min'
-      },
-      {
-        id: 'd1-3',
-        titulo: 'Gestión Integral y Calidad en Servicios de Ginecología Regenerativa',
-        ponente: 'Carlos Capcha (Auditoría Médica)',
-        timestamp: '01:08:30',
-        duracion: '35 min'
-      },
-      {
-        id: 'd1-4',
-        titulo: 'Terapia Tópica y Fórmulas Magistrales en Candidiasis Crónica',
-        ponente: 'Nancy Contreras (Especialista en Fórmulas Magistrales)',
-        timestamp: '01:42:10',
-        duracion: '35 min'
-      },
-      {
-        id: 'd1-5',
-        titulo: 'Mesa de Discusión: Protocolos Clínicos de Diagnóstico Molecular Femenino',
-        ponente: 'Panel Moderado por Victoria Gutiérrez',
-        timestamp: '02:14:30',
-        duracion: '30 min'
-      },
-      {
-        id: 'd1-6',
-        titulo: 'Innovación Tecnológica y Telemedicina en Ginecología de Precisión',
-        ponente: 'Ing. Marlon Molina (Sistemas y Proyectos TI)',
-        timestamp: '03:31:45',
-        duracion: '40 min'
-      },
-      {
-        id: 'd1-7',
-        titulo: 'Eje Intestino-Microbioma Femenino: Impacto en Síndrome Metabólico',
-        ponente: 'Adrián Díaz (Comité Científico)',
-        timestamp: '04:06:20',
-        duracion: '45 min'
-      },
-      {
-        id: 'd1-8',
-        titulo: 'Logística, Accesibilidad y Cumplimiento de Tratamientos Íntimos',
-        ponente: 'Leidy Meléndez (Gestión Administrativa y Clínica)',
-        timestamp: '04:46:20',
-        duracion: '40 min'
-      }
+      { id: 'd1-1', titulo: 'Palabras de Bienvenida e Inauguración del Congreso', ponente: 'Dr. Cristian Hidalgo Pajuelo', timestamp: '00:00:00', duracion: '19 min' },
+      { id: 'd1-2', titulo: 'Futuro de la medicina Femenina: Del microbioma a la prevención', ponente: 'Dra. Annalisa Di Rocco // Dra. Valerie Sánchez', timestamp: '00:19:20', duracion: '24 min' },
+      { id: 'd1-3', titulo: 'Bases del microbioma intestinal y su impacto sistémico', ponente: 'Dr. Marco Carvajal // Dra. Valerie Sánchez', timestamp: '00:43:40', duracion: '53 min' },
+      { id: 'd1-4', titulo: 'Microbioma en crecimiento: Nutrición, inmunidad y desarrollo infantil', ponente: 'Dr. Roberto Somocurcio // Dra. Valerie Sánchez', timestamp: '01:36:57', duracion: '35 min' },
+      { id: 'd1-5', titulo: 'El ecosistema microbiano femenino: Microbioma vaginal y endometrial', ponente: 'Dr. Cristian Hidalgo Pajuelo // Dra. María Gracia Costa', timestamp: '02:11:51', duracion: '34 min' },
+      { id: 'd1-6', titulo: 'Transmisión Vertical Madre - Hijo durante la gestación y parto', ponente: 'Dr. Juan Miguel Rodríguez Gómez // Dra. María Gracia Costa', timestamp: '02:46:38', duracion: '40 min' },
+      { id: 'd1-7', titulo: 'Leche materna: Arquitecta del microbioma infantil', ponente: 'Dra. Beatriz Espín // Dra. Yessica Quispe', timestamp: '03:26:55', duracion: '37 min' },
+      { id: 'd1-8', titulo: 'Modulando el Microbioma Reproductivo y resultados clínicos', ponente: 'Dra. Inmaculada Moreno // Dra. Yessica Quispe', timestamp: '04:03:42', duracion: '40 min' },
+      { id: 'd1-9', titulo: 'Más allá de la composición microbiana y metabolómica', ponente: 'Dr. David Cotán // Dra. Yessica Quispe', timestamp: '04:43:40', duracion: '46 min' },
+      { id: 'd1-10', titulo: 'Nutrición en el microbioma femenino', ponente: 'Lic. Ariadna López // Dra. Karina Coricaza', timestamp: '05:29:30', duracion: '26 min' },
+      { id: 'd1-11', titulo: 'Nutrición funcional, inflamación y metabolómica aplicada', ponente: 'Lic. Yolanda Quintero // Dra. Karina Coricaza', timestamp: '05:55:18', duracion: '39 min' },
+      { id: 'd1-12', titulo: 'Suplementación como herramienta de modulación en microbiota', ponente: 'Dra. Miluska Montalvo // Dra. Alesandra Huerta', timestamp: '06:34:55', duracion: '33 min' },
+      { id: 'd1-13', titulo: 'Implementación clínica de programas nutricionales', ponente: 'Lic. Karla Custodio // Dra. Alesandra Huerta', timestamp: '07:08:25', duracion: '44 min' },
+      { id: 'd1-14', titulo: 'Mesa redonda: Nutrición, metabolismo y microbioma femenino', ponente: 'Panel de Especialistas del Bloque', timestamp: '07:52:25', duracion: '40 min' }
     ]
   },
   {
     diaId: 'dia-2',
     tituloJornada: 'Jornada Día 2',
     fechaTexto: 'Domingo 18 de Octubre, 2026',
-    youtubeId: 'zDfIXmHDz0M',
+    youtubeId: 'AYjDTb29ges',
     ponencias: [
-      {
-        id: 'd2-1',
-        titulo: 'Bienvenida Jornada 2: Microbioma Vaginal y Medicina Reproductiva',
-        ponente: 'Karwin Alcántara',
-        timestamp: '00:10:00',
-        duracion: '50 min'
-      },
-      {
-        id: 'd2-2',
-        titulo: 'Manejo Terapéutico de Vaginosis Bacteriana Recidivante con Ácido Bórico',
-        ponente: 'Dra. Valerie Sánchez',
-        timestamp: '01:15:30',
-        duracion: '60 min'
-      },
-      {
-        id: 'd2-3',
-        titulo: 'Atención y Trazabilidad Asistencial en Teleconsultas de Salud Femenina',
-        ponente: 'Victoria Gutiérrez (Coordinación Asistencial)',
-        timestamp: '02:30:00',
-        duracion: '55 min'
-      },
-      {
-        id: 'd2-4',
-        titulo: 'Regulación del pH Vaginal y Barreras Fisiológicas en la Perimenopausia',
-        ponente: 'Adrián Díaz',
-        timestamp: '03:45:00',
-        duracion: '60 min'
-      },
-      {
-        id: 'd2-5',
-        titulo: 'Buenas Prácticas en Dispensación y Formulación Íntima para la Mujer',
-        ponente: 'Nancy Contreras',
-        timestamp: '05:00:15',
-        duracion: '65 min'
-      },
-      {
-        id: 'd2-6',
-        titulo: 'Optimización de Procesos Financieros en Proyectos de Salud Femenina',
-        ponente: 'Ivonne Melgarejo (Finanzas & Tesorería)',
-        timestamp: '06:15:40',
-        duracion: '45 min'
-      },
-      {
-        id: 'd2-7',
-        titulo: 'Seguridad Digital y Resguardo de Datos Clínicos de Pacientes Ginecológicas',
-        ponente: 'Ing. Marlon Molina',
-        timestamp: '07:10:00',
-        duracion: '45 min'
-      },
-      {
-        id: 'd2-8',
-        titulo: 'Supervisión de Calidad, Cumplimiento Normativo y Auditoría en Salud',
-        ponente: 'Carlos Capcha',
-        timestamp: '08:00:20',
-        duracion: '40 min'
-      },
-      {
-        id: 'd2-9',
-        titulo: 'Clausura Científica: Nuevas Directivas y Certificación Oficial CMP',
-        ponente: 'Leidy Meléndez & Dirección Médica',
-        timestamp: '08:45:00',
-        duracion: '35 min'
-      }
+      { id: 'd2-1', titulo: 'El microbioma en la menopausia: Hormonas y ecosistema', ponente: 'Dr. Fernando Losa // Dra. Allysson Montenegro', timestamp: '00:00:00', duracion: '38 min' },
+      { id: 'd2-2', titulo: 'Impacto de los antibióticos en la microbiota intestinal y vaginal', ponente: 'Dr. Christian Boggio Marzet // Dra. Allysson Montenegro', timestamp: '00:38:38', duracion: '48 min' },
+      { id: 'd2-3', titulo: 'Estudio del microbioma vaginal en el mundo y Perú (Proyecto Laura)', ponente: 'Dra. Sandra Condori // Dra. Liliana Díaz', timestamp: '01:27:10', duracion: '39 min' },
+      { id: 'd2-4', titulo: 'Infecciones urinarias y microbioma urinario femenino', ponente: 'Dr. Cristian Hidalgo Pajuelo // Dra. Liliana Díaz', timestamp: '02:06:33', duracion: '53 min' },
+      { id: 'd2-5', titulo: 'Microbiota en la endometriosis: Lactobacillus y epigenética', ponente: 'Dra. Annalisa Di Rocco // Dra. Valerie Sánchez', timestamp: '03:03:02', duracion: '43 min' },
+      { id: 'd2-6', titulo: 'Infecciones vaginales: Candidiasis recurrente y biofilms', ponente: 'Dr. Cristian Hidalgo Pajuelo // Dra. Valerie Sánchez', timestamp: '03:46:21', duracion: '30 min' },
+      { id: 'd2-7', titulo: 'Metabolismo del estrógeno y la microbiota (Estroboloma)', ponente: 'Dra. Annalisa Di Rocco // Dra. Sofia Saldaña', timestamp: '04:16:44', duracion: '28 min' },
+      { id: 'd2-8', titulo: 'Salud emocional, estrés crónico y microbioma femenino', ponente: 'Dra. Verónica Morín // Dra. Sofia Saldaña', timestamp: '04:44:37', duracion: '54 min' }
     ]
   }
 ]
@@ -196,14 +90,14 @@ const formatSeconds = (totalSecs: number): string => {
 }
 
 // ==========================================
-// 3. VISOR CON PROTECCIÓN DE CAPA INVISIBLE
+// 2. VISOR CON PROTECCIÓN DE CAPA INVISIBLE
 // ==========================================
 interface VisorProps {
-  usuario: { nombre: string; dni: string; codigo: string }
+  correoUsuario: string
   onLogout: () => void
 }
 
-const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorProps) {
+const VisorSesiones = memo(function VisorSesiones({ correoUsuario, onLogout }: VisorProps) {
   const [jornadaSeleccionada, setJornadaSeleccionada] = useState<Jornada>(JORNADAS_CONGRESO[0])
   const [ponenciaActiva, setPonenciaActiva] = useState<Ponencia>(JORNADAS_CONGRESO[0].ponencias[0])
   const [isPlaying, setIsPlaying] = useState(false)
@@ -225,9 +119,9 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
         playerVars: {
           rel: 0,
           modestbranding: 1,
-          controls: 0, // Ocultamos controles nativos para que no puedan usar el botón de YouTube
-          disablekb: 1, // Deshabilitar atajos de teclado que puedan abrir links
-          fs: 1,        // Permitir pantalla completa controlada
+          controls: 0,
+          disablekb: 1,
+          fs: 1,
           iv_load_policy: 3,
           enablejsapi: 1,
           origin: typeof window !== 'undefined' ? window.location.origin : ''
@@ -241,7 +135,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             }
           },
           onStateChange: (event: any) => {
-            // 1: Playing, 2: Paused
             if (event.data === 1) setIsPlaying(true)
             if (event.data === 2) setIsPlaying(false)
           }
@@ -262,7 +155,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
       initPlayer()
     }
 
-    // Cronómetro para actualizar el tiempo actual
     timerIntervalRef.current = setInterval(() => {
       if (playerRef.current && isReadyRef.current && typeof playerRef.current.getCurrentTime === 'function') {
         setCurrentTime(Math.floor(playerRef.current.getCurrentTime()))
@@ -304,7 +196,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
     }
   }
 
-  // Controles seguros propios
   const togglePlay = () => {
     if (!playerRef.current || !isReadyRef.current) return
     if (isPlaying) {
@@ -328,14 +219,14 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <div>
-            <h2 className="text-sm font-semibold text-white">Sesiones FEMBIOMA World Summit 2026</h2>
+            <h2 className="text-sm font-semibold text-white">Grabaciones FEMBIOMA World Summit 2026</h2>
             <p className="text-xs text-slate-400">
-              Participante: <span className="text-slate-200 font-medium">{usuario.nombre}</span> (Doc: {usuario.dni})
+              Sesión activa: <span className="text-[#f06d84] font-medium">{correoUsuario}</span>
             </p>
           </div>
         </div>
@@ -371,41 +262,20 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             ))}
           </div>
 
-          {/* ========================================================= */}
-          {/* REPRODUCTOR CON CAPAS INVISIBLES DE PROTECCIÓN (OVERLAYS) */}
-          {/* ========================================================= */}
+          {/* REPRODUCTOR CON CAPAS PROTECTORAS */}
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl select-none">
-            {/* Contenedor Iframe YouTube */}
             <div id="yt-player-frame" className="w-full h-full pointer-events-none" />
 
-            {/* CAPA 1: Escudo Central Transparente (Clic simple hace Play/Pause; Bloquea menú contextual) */}
-            <div 
-              onClick={togglePlay}
-              onContextMenu={(e) => e.preventDefault()}
-              className="absolute inset-0 z-20 cursor-pointer bg-transparent"
-              title="Haz clic para reproducir o pausar"
-            />
+            <div onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} className="absolute inset-0 z-20 cursor-pointer bg-transparent" title="Haz clic para reproducir o pausar" />
+            <div onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} className="absolute top-0 left-0 w-full h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" />
+            <div onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" />
 
-            {/* CAPA 2: Bloqueador Superior (Cubre zona de Título y Compartir de YouTube) */}
-            <div 
-              onContextMenu={(e) => e.preventDefault()}
-              className="absolute top-0 left-0 w-full h-16 z-30 pointer-events-auto bg-transparent cursor-pointer"
-              onClick={togglePlay}
-            />
-
-            {/* CAPA 3: Bloqueador Inferior Derecho (Cubre el logo "YouTube" y botones externos) */}
-            <div 
-              onContextMenu={(e) => e.preventDefault()}
-              className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer"
-              onClick={togglePlay}
-            />
-
-            {/* Marca de agua institucional inviolable */}
+            {/* Marca de agua institucional */}
             <div className="absolute top-3 right-3 z-30 pointer-events-none select-none bg-slate-950/85 backdrop-blur-sm border border-slate-700/50 px-3 py-1 rounded-md text-[10px] tracking-wide text-slate-300 font-mono shadow-sm">
-              FEMBIOMA 2026 · Doc: {usuario.dni} · Acceso Personal
+              FEMBIOMA 2026 · {correoUsuario}
             </div>
 
-            {/* BARRA DE CONTROLES PROPIA (Totalmente aislada de YouTube) */}
+            {/* Controles propios */}
             <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent p-3 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
                 <button
@@ -456,7 +326,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
         </div>
 
-        {/* Panel lateral con las sesiones */}
+        {/* Panel lateral con minutero interactivo */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
@@ -518,26 +388,22 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
 })
 
 // ==========================================
-// 4. PÁGINA PRINCIPAL Y AUTENTICACIÓN
+// 3. PÁGINA PRINCIPAL Y AUTENTICACIÓN DINÁMICA
 // ==========================================
 export default function GrabacionesPage() {
-  const [dni, setDni] = useState('')
   const [correo, setCorreo] = useState('')
   const [codigoAcceso, setCodigoAcceso] = useState('')
   const [error, setError] = useState('')
-  const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ nombre: string; dni: string; codigo: string } | null>(null)
+  const [cargando, setCargando] = useState(false)
+  const [usuarioAutenticado, setUsuarioAutenticado] = useState<string | null>(null)
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
 
   useEffect(() => {
     if (new Date() > FECHA_LIMITE) setTiempoExpirado(true)
 
-    const sesion = sessionStorage.getItem('fembioma_user')
+    const sesion = sessionStorage.getItem('fembioma_user_email')
     if (sesion) {
-      try {
-        setUsuarioAutenticado(JSON.parse(sesion))
-      } catch {
-        sessionStorage.removeItem('fembioma_user')
-      }
+      setUsuarioAutenticado(sesion)
     }
 
     const handleContextMenu = (e: MouseEvent) => e.preventDefault()
@@ -559,34 +425,39 @@ export default function GrabacionesPage() {
     }
   }, [])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setCargando(true)
 
-    const dniLimpio = dni.trim()
-    const correoLimpio = correo.trim().toLowerCase()
-    const codigoLimpio = codigoAcceso.trim().toUpperCase()
+    try {
+      const res = await fetch('/api/validar-acceso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          correo: correo.trim().toLowerCase(),
+          codigo: codigoAcceso.trim().toUpperCase(),
+        }),
+      })
 
-    const encontrado = PADRON_AUTORIZADO.find(
-      (u) =>
-        u.dni === dniLimpio &&
-        u.correo.toLowerCase() === correoLimpio &&
-        u.codigo.toUpperCase() === codigoLimpio
-    )
+      const data = await res.json()
 
-    if (encontrado) {
-      const data = { nombre: encontrado.nombre, dni: encontrado.dni, codigo: encontrado.codigo }
-      setUsuarioAutenticado(data)
-      sessionStorage.setItem('fembioma_user', JSON.stringify(data))
-    } else {
-      setError('Los datos ingresados no coinciden con el padrón oficial de participantes confirmados.')
+      if (res.ok && data.valido) {
+        setUsuarioAutenticado(data.correo)
+        sessionStorage.setItem('fembioma_user_email', data.correo)
+      } else {
+        setError(data.error || 'Credenciales incorrectas en el padrón.')
+      }
+    } catch {
+      setError('Error al conectar con el servidor de validación. Inténtalo nuevamente.')
+    } finally {
+      setCargando(false)
     }
   }
 
   const handleLogout = () => {
-    sessionStorage.removeItem('fembioma_user')
+    sessionStorage.removeItem('fembioma_user_email')
     setUsuarioAutenticado(null)
-    setDni('')
     setCorreo('')
     setCodigoAcceso('')
   }
@@ -615,10 +486,10 @@ export default function GrabacionesPage() {
                 <Lock className="w-6 h-6" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-white">
-                Sesiones FEMBIOMA World Summit 2026
+                Grabaciones FEMBIOMA 2026
               </h1>
               <p className="text-sm text-slate-400 mt-2">
-                Ingreso exclusivo para participantes inscritos. Digita tu documento, correo y código de acceso.
+                Ingreso exclusivo para participantes. Digita tu correo registrado y tu código personal de 5 caracteres.
               </p>
             </div>
 
@@ -636,44 +507,34 @@ export default function GrabacionesPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    DNI o Documento de Identidad
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={dni}
-                    onChange={(e) => setDni(e.target.value)}
-                    placeholder="Ej. 12345678"
-                    className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                     Correo Electrónico Registrado
                   </label>
-                  <input
-                    type="email"
-                    required
-                    value={correo}
-                    onChange={(e) => setCorreo(e.target.value)}
-                    placeholder="tucorreo@ejemplo.com"
-                    className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm"
-                  />
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required
+                      value={correo}
+                      onChange={(e) => setCorreo(e.target.value)}
+                      placeholder="tucorreo@ejemplo.com"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm"
+                    />
+                    <Mail className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Código de Acceso
+                    Código de Acceso Personal (5 caracteres)
                   </label>
                   <div className="relative">
                     <input
                       type="text"
                       required
+                      maxLength={5}
                       value={codigoAcceso}
-                      onChange={(e) => setCodigoAcceso(e.target.value)}
-                      placeholder="Ej. FEM-VIP-2026"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-wider font-mono"
+                      onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
+                      placeholder="Ej. CS9TG"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
                     />
                     <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
@@ -681,10 +542,20 @@ export default function GrabacionesPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2"
+                  disabled={cargando}
+                  className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <ShieldCheck className="w-4 h-4" />
-                  Validar e Ingresar
+                  {cargando ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Validando en el padrón...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Ingresar a las Grabaciones</span>
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -697,7 +568,7 @@ export default function GrabacionesPage() {
           </div>
         </div>
       ) : (
-        <VisorSesiones usuario={usuarioAutenticado} onLogout={handleLogout} />
+        <VisorSesiones correoUsuario={usuarioAutenticado} onLogout={handleLogout} />
       )}
     </div>
   )
