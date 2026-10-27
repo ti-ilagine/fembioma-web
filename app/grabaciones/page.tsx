@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { 
   Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
-  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, Mail, Loader2, Eye, EyeOff 
+  ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, 
+  Mail, Loader2, Eye, EyeOff, HelpCircle, X, ArrowRight 
 } from 'lucide-react'
 
 declare global {
@@ -300,7 +301,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
               className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" 
             />
 
-            {/* Controles de reproducción con scrubber libre */}
+            {/* Controles de reproducción con scrubber */}
             <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent p-3 pt-6 flex flex-col gap-2 text-white">
               <div className="flex items-center gap-2 w-full">
                 <span className="text-[11px] font-mono text-rose-400 shrink-0 font-medium w-14 text-right">
@@ -432,6 +433,13 @@ export default function GrabacionesPage() {
   const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ correo: string; nombre: string } | null>(null)
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
 
+  // Estados para el Modal de Recuperar Código
+  const [modalRecuperarAbierto, setModalRecuperarAbierto] = useState(false)
+  const [correoRecuperar, setCorreoRecuperar] = useState('')
+  const [cargandoRecuperar, setCargandoRecuperar] = useState(false)
+  const [errorRecuperar, setErrorRecuperar] = useState('')
+  const [codigoRecuperado, setCodigoRecuperado] = useState<{ nombre: string; codigo: string } | null>(null)
+
   useEffect(() => {
     if (new Date() > FECHA_LIMITE) setTiempoExpirado(true)
 
@@ -494,6 +502,40 @@ export default function GrabacionesPage() {
     }
   }
 
+  const handleRecuperarCodigo = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErrorRecuperar('')
+    setCodigoRecuperado(null)
+    setCargandoRecuperar(true)
+
+    try {
+      const res = await fetch('/api/recuperar-codigo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo: correoRecuperar.trim().toLowerCase() }),
+      })
+      const data = await res.json()
+
+      if (res.ok && data.exito) {
+        setCodigoRecuperado({ nombre: data.nombre, codigo: data.codigo })
+      } else {
+        setErrorRecuperar(data.error || 'El correo ingresado no figura en el padrón activo.')
+      }
+    } catch {
+      setErrorRecuperar('Error al consultar. Por favor intente nuevamente.')
+    } finally {
+      setCargandoRecuperar(false)
+    }
+  }
+
+  const aplicarCodigoRecuperado = () => {
+    if (!codigoRecuperado) return
+    setCorreo(correoRecuperar.trim().toLowerCase())
+    setCodigoAcceso(codigoRecuperado.codigo)
+    setModalRecuperarAbierto(false)
+    setError('')
+  }
+
   const handleLogout = () => {
     sessionStorage.removeItem('fembioma_user')
     setUsuarioAutenticado(null)
@@ -536,7 +578,6 @@ export default function GrabacionesPage() {
               onSubmit={handleLogin}
               className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md"
             >
-              {/* Alerta en contraste ámbar/naranja visible */}
               {error && (
                 <div className="mb-6 p-4 rounded-xl border-2 border-amber-500/70 bg-amber-950/40 flex items-start gap-3 text-amber-200 text-xs shadow-lg">
                   <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
@@ -563,9 +604,24 @@ export default function GrabacionesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Código de Acceso Personal (5 caracteres)
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Código Personal (5 caracteres)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalRecuperarAbierto(true)
+                        setErrorRecuperar('')
+                        setCodigoRecuperado(null)
+                        setCorreoRecuperar(correo)
+                      }}
+                      className="text-[11px] text-[#f06d84] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <HelpCircle className="w-3 h-3" />
+                      ¿Olvidaste tu código?
+                    </button>
+                  </div>
                   <div className="relative">
                     <input
                       type={mostrarCodigo ? 'text' : 'password'}
@@ -615,6 +671,73 @@ export default function GrabacionesPage() {
               </div>
             </form>
           </div>
+
+          {/* MODAL DE RECUPERACIÓN / CONSULTA DE CÓDIGO */}
+          {modalRecuperarAbierto && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
+              <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+                <button
+                  onClick={() => setModalRecuperarAbierto(false)}
+                  className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="text-center pt-2">
+                  <div className="inline-flex p-2.5 bg-[#f06d84]/15 text-[#f06d84] rounded-xl mb-2">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg font-serif font-bold text-white">Consulta tu Código</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Ingresa el correo con el que te registraste para recuperar tu código personal de 5 caracteres.
+                  </p>
+                </div>
+
+                {errorRecuperar && (
+                  <div className="p-3 rounded-xl border border-amber-500/50 bg-amber-950/40 text-amber-200 text-xs">
+                    {errorRecuperar}
+                  </div>
+                )}
+
+                {!codigoRecuperado ? (
+                  <form onSubmit={handleRecuperarCodigo} className="space-y-3">
+                    <input
+                      type="email"
+                      required
+                      placeholder="tucorreo@ejemplo.com"
+                      value={correoRecuperar}
+                      onChange={(e) => setCorreoRecuperar(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-xs focus:border-[#f06d84] focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={cargandoRecuperar}
+                      className="w-full py-2.5 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-xs transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {cargandoRecuperar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Consultar Código'}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="space-y-3 text-center bg-emerald-950/40 border border-emerald-500/50 p-4 rounded-2xl">
+                    <p className="text-xs text-emerald-300 font-medium">¡Hola, {codigoRecuperado.nombre}!</p>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block mb-0.5">Tu código de acceso:</span>
+                      <span className="text-2xl font-mono font-bold tracking-widest text-[#f06d84]">
+                        {codigoRecuperado.codigo}
+                      </span>
+                    </div>
+                    <button
+                      onClick={aplicarCodigoRecuperado}
+                      className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-700"
+                    >
+                      <span>Usar y Volver al Login</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <VisorSesiones usuario={usuarioAutenticado} onLogout={handleLogout} />
