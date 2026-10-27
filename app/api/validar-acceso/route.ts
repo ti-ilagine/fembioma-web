@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const correoLimpio = String(correo).trim().toLowerCase()
     const codigoLimpio = String(codigo).trim().toUpperCase()
 
-    // Clave de contingencia de soporte / TI
+    // Acceso comodín de soporte / TI
     if (codigoLimpio === 'FEM26') {
       return NextResponse.json({
         valido: true,
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // Consulta en milisegundos a Cloudflare D1
+    // Consulta directa a la base de datos D1
     const { env } = getRequestContext()
     const db = (env as any).DB
 
@@ -48,13 +48,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         valido: false,
-        error: 'El correo o código ingresado no figura en el padrón activo. Contacte a soporte.',
+        error: 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.',
       },
       { status: 401 }
     )
   } catch (error) {
     return NextResponse.json(
-      { valido: false, error: 'Error interno al validar credenciales.' },
+      { valido: false, error: 'Error interno de validación.' },
       { status: 500 }
     )
   }
