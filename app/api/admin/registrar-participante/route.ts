@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 
 export const runtime = 'edge'
 
-// Alfabeto seguro sin caracteres ambiguos (sin 0, O, 1, I)
 const CARACTERES = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
 
 function generarCodigoRandom(): string {
@@ -15,17 +14,9 @@ function generarCodigoRandom(): string {
 
 export async function POST(request: Request) {
   try {
-    const { nombre, correo, pinAutorizacion } = await request.json()
+    const { accion, nombre, correo, pinAutorizacion, codigoManual } = await request.json()
 
-    if (!nombre || !correo || !pinAutorizacion) {
-      return NextResponse.json(
-        { error: 'Todos los campos son obligatorios.' },
-        { status: 400 }
-      )
-    }
-
-    // PIN de ventas exclusivo para el equipo administrativo (puedes cambiarlo)
-    const PIN_VALIDO = 'MARLONDICE'
+    const PIN_VALIDO = 'VENTAS2026'
 
     if (String(pinAutorizacion).trim() !== PIN_VALIDO) {
       return NextResponse.json(
@@ -34,23 +25,59 @@ export async function POST(request: Request) {
       )
     }
 
-    const correoLimpio = String(correo).trim().toLowerCase()
-    const nombreLimpio = String(nombre).trim()
+    if (!correo) {
+      return NextResponse.json({ error: 'El correo es obligatorio.' }, { status: 400 })
+    }
 
-    // Conexión directa a Cloudflare D1
+    const correoLimpio = String(correo).trim().toLowerCase()
+
     const db =
       (process.env as any).DB ||
       (globalThis as any).DB ||
       (globalThis as any).__env__?.DB
 
     if (!db) {
-      return NextResponse.json(
-        { error: 'Error de conexión con la base de datos.' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Error de base de datos.' }, { status: 500 })
     }
 
-    // 1. Verificar si el correo ya cuenta con acceso
+    // ACCIÓN 1: CAMBIAR / RESETEAR CLAVE DE ALUMNO EXISTENTE
+    if (accion === 'cambiar_clave') {
+      const usuario = await db
+        .prepare('SELECT nombre FROM participantes WHERE LOWER(correo) = ?')
+        .bind(correoLimpio)
+        .first()
+
+      if (!usuario) {
+        return NextResponse.json(
+          { error: 'No se encontró ningún participante registrado con ese correo.' },
+          { status: 404 }
+        )
+      }
+
+      const nuevoCodigo = codigoManual ? String(codigoManual).trim().toUpperCase() : generarCodigoRandom()
+
+      await db
+        .prepare('UPDATE participantes SET codigo = ? WHERE LOWER(correo) = ?')
+        .bind(nuevoCodigo, correoLimpio)
+        .run()
+
+      return NextResponse.json({
+        mensaje: '¡Código de acceso actualizado exitosamente!',
+        participante: {
+          nombre: usuario.nombre,
+          correo: correoLimpio,
+          codigo: nuevoCodigo,
+        },
+      })
+    }
+
+    // ACCIÓN 2: REGISTRO NORMAL DE NUEVO ALUMNO
+    if (!nombre) {
+      return NextResponse.json({ error: 'El nombre es obligatorio para registros nuevos.' }, { status: 400 })
+    }
+
+    const nombreLimpio = String(nombre).trim()
+
     const existente = await db
       .prepare('SELECT correo, codigo, nombre FROM participantes WHERE LOWER(correo) = ?')
       .bind(correoLimpio)
@@ -58,7 +85,7 @@ export async function POST(request: Request) {
 
     if (existente) {
       return NextResponse.json({
-        mensaje: 'El correo ya se encontraba registrado previamente.',
+        mensaje: 'El correo ya figuraba en el padrón.',
         yaExistia: true,
         participante: {
           nombre: existente.nombre,
@@ -68,14 +95,10 @@ export async function POST(request: Request) {
       })
     }
 
-    // 2. Generar código de 5 caracteres único
     const nuevoCodigo = generarCodigoRandom()
 
-    // 3. Insertar en D1
     await db
-      .prepare(
-        'INSERT INTO participantes (correo, codigo, nombre) VALUES (?, ?, ?)'
-      )
+      .prepare('INSERT INTO participantes (correo, codigo, nombre) VALUES (?, ?, ?)')
       .bind(correoLimpio, nuevoCodigo, nombreLimpio)
       .run()
 
@@ -88,10 +111,7 @@ export async function POST(request: Request) {
         codigo: nuevoCodigo,
       },
     })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error interno al registrar participante en el padrón.' },
-      { status: 500 }
-    )
+  } catch {
+    return NextResponse.json({ error: 'Error interno de servidor.' }, { status: 500 })
   }
 }
