@@ -5,7 +5,7 @@ import {
   Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
   ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, 
   Mail, Loader2, Eye, EyeOff, HelpCircle, X, ArrowRight,
-  Maximize, Minimize, Gauge, Search, ShieldAlert
+  Maximize, Minimize, Gauge, Search, ShieldAlert, Sparkles
 } from 'lucide-react'
 
 declare global {
@@ -72,6 +72,13 @@ const JORNADAS_CONGRESO: Jornada[] = [
   }
 ]
 
+const FRASES_TRANSICION = [
+  'Accediendo a la plataforma oficial...',
+  'Validando credenciales y registrando sesión...',
+  'Sincronizando conferencias y ponencias magistrales...',
+  'Dejando todo listo para tu experiencia...'
+]
+
 const FECHA_LIMITE = new Date('2026-11-30T23:59:59')
 
 const timeToSeconds = (timeStr: string): number => {
@@ -88,7 +95,6 @@ const formatSeconds = (totalSecs: number): string => {
   return `${h > 0 ? h + ':' : ''}${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`
 }
 
-// Obtener o generar identificador de dispositivo local
 function obtenerIdDispositivo(): string {
   if (typeof window === 'undefined') return 'servidor'
   let devId = localStorage.getItem('fembioma_device_id')
@@ -113,15 +119,8 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  // Transición cinemática del logo
-  const [mostrarSplash, setMostrarSplash] = useState(true)
-  const [fadeSplash, setFadeSplash] = useState(false)
-
-  // Modos de reproducción
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [velocidad, setVelocidad] = useState<number>(1)
-
-  // Buscador de ponencias
   const [busqueda, setBusqueda] = useState('')
 
   const playerRef = useRef<any>(null)
@@ -130,10 +129,8 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
   const timerIntervalRef = useRef<any>(null)
   const heartbeatIntervalRef = useRef<any>(null)
 
-  // Marca de agua periódica al centro (cada 5 min por 6 seg)
   const mostrarMarcaAgua = currentTime > 15 && (currentTime % 300) < 6
 
-  // Filtrado de ponencias
   const ponenciasFiltradas = useMemo(() => {
     if (!busqueda.trim()) return jornadaSeleccionada.ponencias
     const q = busqueda.toLowerCase().trim()
@@ -142,7 +139,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
     )
   }, [jornadaSeleccionada, busqueda])
 
-  // Chequeo de sesión concurrente cada 30 segundos
   useEffect(() => {
     heartbeatIntervalRef.current = setInterval(async () => {
       try {
@@ -193,11 +189,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
             setDuration(Math.floor(event.target.getDuration() || 0))
             const startSecs = timeToSeconds(ponenciaActiva.timestamp)
             if (startSecs > 0) event.target.seekTo(startSecs, true)
-
-            setTimeout(() => {
-              setFadeSplash(true)
-              setTimeout(() => setMostrarSplash(false), 700)
-            }, 1400)
           },
           onStateChange: (event: any) => {
             if (event.data === 1) setIsPlaying(true)
@@ -321,7 +312,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 animate-in fade-in duration-700">
       <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
         <div>
           <div className="flex items-center gap-2">
@@ -373,7 +364,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
           >
             <div id="yt-player-frame" className="w-full h-full pointer-events-none" />
 
-            {/* MARCA DE AGUA AL CENTRO */}
+            {/* MARCA DE AGUA PERIÓDICA AL CENTRO */}
             {mostrarMarcaAgua && (
               <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none select-none animate-in fade-in zoom-in duration-300">
                 <div className="px-5 py-3 rounded-2xl bg-slate-950/75 border border-slate-700/80 backdrop-blur-md shadow-2xl text-center space-y-1">
@@ -387,29 +378,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
                   <p className="text-[9px] text-slate-400 tracking-tight">
                     Prohibida la captura, retransmisión o duplicación total o parcial.
                   </p>
-                </div>
-              </div>
-            )}
-
-            {/* CORTINA DE INTRO CON LOGO */}
-            {mostrarSplash && (
-              <div
-                className={`absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-700 ease-out select-none ${
-                  fadeSplash ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                }`}
-              >
-                <div className="flex flex-col items-center gap-4 animate-pulse">
-                  <div className="relative p-4 rounded-3xl bg-slate-900/60 border border-slate-800 shadow-2xl">
-                    <img
-                      src="/logo-fembioma.png"
-                      alt="FEMBIOMA World Summit 2026"
-                      className="h-12 sm:h-16 w-auto object-contain drop-shadow-[0_0_25px_rgba(240,109,132,0.4)]"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
-                    <span className="w-2 h-2 rounded-full bg-[#f06d84] animate-ping" />
-                    <span>Iniciando transmisión oficial...</span>
-                  </div>
                 </div>
               </div>
             )}
@@ -616,7 +584,13 @@ export default function GrabacionesPage() {
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
   const [sesionDuplicada, setSesionDuplicada] = useState(false)
 
-  // Estados del modal de recuperación
+  // ESTADOS DE LA TRANSICIÓN CINEMÁTICA DE 8 SEGUNDOS
+  const [mostrandoTransicion, setMostrandoTransicion] = useState(false)
+  const [indiceFrase, setIndiceFrase] = useState(0)
+  const [progresoTransicion, setProgresoTransicion] = useState(0)
+  const [datosPendientes, setDatosPendientes] = useState<any>(null)
+
+  // Modal de recuperación
   const [modalRecuperarAbierto, setModalRecuperarAbierto] = useState(false)
   const [correoRecuperar, setCorreoRecuperar] = useState('')
   const [cargandoRecuperar, setCargandoRecuperar] = useState(false)
@@ -654,6 +628,48 @@ export default function GrabacionesPage() {
     }
   }, [])
 
+  // Secuencia de 8 segundos (cambio de frases cada 2s y progreso suave)
+  useEffect(() => {
+    if (!mostrandoTransicion) return
+
+    setIndiceFrase(0)
+    setProgresoTransicion(5)
+
+    // Cambio de frases cada 2000 ms (4 frases = 8 segundos)
+    const fraseInterval = setInterval(() => {
+      setIndiceFrase((prev) => {
+        if (prev < FRASES_TRANSICION.length - 1) return prev + 1
+        return prev
+      })
+    }, 2000)
+
+    // Progreso suave de la barra
+    const progressInterval = setInterval(() => {
+      setProgresoTransicion((prev) => {
+        if (prev >= 98) return 98
+        return prev + 1.25
+      })
+    }, 100)
+
+    // Fin de los 8 segundos exactos
+    const timeoutFinal = setTimeout(() => {
+      setProgresoTransicion(100)
+      setTimeout(() => {
+        setMostrandoTransicion(false)
+        if (datosPendientes) {
+          setUsuarioAutenticado(datosPendientes)
+          sessionStorage.setItem('fembioma_user', JSON.stringify(datosPendientes))
+        }
+      }, 500)
+    }, 8000)
+
+    return () => {
+      clearInterval(fraseInterval)
+      clearInterval(progressInterval)
+      clearTimeout(timeoutFinal)
+    }
+  }, [mostrandoTransicion, datosPendientes])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -676,9 +692,9 @@ export default function GrabacionesPage() {
 
       if (res.ok && data.valido) {
         const payload = { correo: data.correo, nombre: data.nombre, sessionToken: data.sessionToken }
-        setUsuarioAutenticado(payload)
-        sessionStorage.setItem('fembioma_user', JSON.stringify(payload))
+        setDatosPendientes(payload)
         setSesionDuplicada(false)
+        setMostrandoTransicion(true)
       } else {
         setError(data.error || 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
       }
@@ -752,6 +768,55 @@ export default function GrabacionesPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-[#f06d84]/30">
+      
+      {/* PANTALLA DE TRANSICIÓN CINEMÁTICA DE 8 SEGUNDOS */}
+      {mostrandoTransicion && (
+        <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 select-none animate-in fade-in duration-500">
+          <div className="relative max-w-sm w-full flex flex-col items-center text-center">
+            
+            {/* Logo FEMBIOMA con halo de brillo */}
+            <div className="relative mb-8">
+              <div className="absolute -inset-4 bg-gradient-to-r from-rose-500/20 to-fuchsia-500/20 rounded-full blur-xl animate-pulse" />
+              <div className="relative p-5 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl">
+                <img
+                  src="/logo-fembioma.png"
+                  alt="FEMBIOMA World Summit 2026"
+                  className="h-14 sm:h-16 w-auto object-contain drop-shadow-[0_0_25px_rgba(240,109,132,0.45)]"
+                />
+              </div>
+            </div>
+
+            {/* Subtítulo institucional */}
+            <span className="text-[11px] font-semibold tracking-widest uppercase text-[#f06d84] mb-2 font-mono flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 animate-spin" />
+              <span>Plataforma Oficial de Grabaciones</span>
+            </span>
+
+            {/* Frase animada rotatoria cada 2 segundos */}
+            <div className="h-12 flex items-center justify-center my-2">
+              <p 
+                key={indiceFrase}
+                className="text-base sm:text-lg font-serif font-medium text-white animate-in fade-in slide-in-from-bottom-2 duration-500"
+              >
+                {FRASES_TRANSICION[indiceFrase]}
+              </p>
+            </div>
+
+            {/* Barra de progreso de 8 segundos */}
+            <div className="w-full bg-slate-900 border border-slate-800 h-2 rounded-full overflow-hidden mt-6 mb-3 p-0.5 shadow-inner">
+              <div 
+                className="h-full bg-gradient-to-r from-rose-500 via-[#f06d84] to-amber-300 rounded-full transition-all duration-150 ease-out"
+                style={{ width: `${progresoTransicion}%` }}
+              />
+            </div>
+
+            <p className="text-[11px] font-mono text-slate-500 tracking-wide">
+              Preparando tu entorno exclusivo...
+            </p>
+          </div>
+        </div>
+      )}
+
       {!usuarioAutenticado ? (
         <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12">
           <div className="w-full max-w-md">
@@ -850,7 +915,7 @@ export default function GrabacionesPage() {
 
                 <button
                   type="submit"
-                  disabled={cargando}
+                  disabled={cargando || mostrandoTransicion}
                   className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {cargando ? (
