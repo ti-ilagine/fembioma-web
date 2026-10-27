@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const { accion, nombre, correo, pinAutorizacion, codigoManual } = await request.json()
 
-    const PIN_VALIDO = 'VENTAS2026'
+    const PIN_VALIDO = 'MARLONCAMBIA'
 
     if (String(pinAutorizacion).trim() !== PIN_VALIDO) {
       return NextResponse.json(
