@@ -88,6 +88,17 @@ const formatSeconds = (totalSecs: number): string => {
   return `${h > 0 ? h + ':' : ''}${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`
 }
 
+// Obtener o generar identificador de dispositivo local
+function obtenerIdDispositivo(): string {
+  if (typeof window === 'undefined') return 'servidor'
+  let devId = localStorage.getItem('fembioma_device_id')
+  if (!devId) {
+    devId = 'dev_' + Math.random().toString(36).substring(2, 12) + '_' + Date.now().toString(36)
+    localStorage.setItem('fembioma_device_id', devId)
+  }
+  return devId
+}
+
 interface VisorProps {
   usuario: { correo: string; nombre: string; sessionToken: string }
   onLogout: () => void
@@ -119,8 +130,10 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
   const timerIntervalRef = useRef<any>(null)
   const heartbeatIntervalRef = useRef<any>(null)
 
+  // Marca de agua periódica al centro (cada 5 min por 6 seg)
   const mostrarMarcaAgua = currentTime > 15 && (currentTime % 300) < 6
 
+  // Filtrado de ponencias
   const ponenciasFiltradas = useMemo(() => {
     if (!busqueda.trim()) return jornadaSeleccionada.ponencias
     const q = busqueda.toLowerCase().trim()
@@ -129,7 +142,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
     )
   }, [jornadaSeleccionada, busqueda])
 
-  // Verificación concurrente activa cada 30 segundos
+  // Chequeo de sesión concurrente cada 30 segundos
   useEffect(() => {
     heartbeatIntervalRef.current = setInterval(async () => {
       try {
@@ -360,7 +373,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
           >
             <div id="yt-player-frame" className="w-full h-full pointer-events-none" />
 
-            {/* MARCA DE AGUA FORENSE PERIÓDICA (AL CENTRO) */}
+            {/* MARCA DE AGUA AL CENTRO */}
             {mostrarMarcaAgua && (
               <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none select-none animate-in fade-in zoom-in duration-300">
                 <div className="px-5 py-3 rounded-2xl bg-slate-950/75 border border-slate-700/80 backdrop-blur-md shadow-2xl text-center space-y-1">
@@ -378,7 +391,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
               </div>
             )}
 
-            {/* CORTINA DE TRANSICIÓN CON LOGO */}
+            {/* CORTINA DE INTRO CON LOGO */}
             {mostrarSplash && (
               <div
                 className={`absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-700 ease-out select-none ${
@@ -647,12 +660,15 @@ export default function GrabacionesPage() {
     setCargando(true)
 
     try {
+      const devId = obtenerIdDispositivo()
+
       const res = await fetch('/api/validar-acceso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           correo: correo.trim().toLowerCase(),
           codigo: codigoAcceso.trim().toUpperCase(),
+          deviceId: devId,
         }),
       })
 
