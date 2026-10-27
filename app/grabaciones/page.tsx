@@ -689,7 +689,7 @@ export default function GrabacionesPage() {
                   </div>
                   <h3 className="text-lg font-serif font-bold text-white">Consulta tu Código</h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    Ingresa el correo con el que te registraste para recuperar tu código personal de 5 caracteres.
+                    Ingresa el correo con el que te registraste en el "Fembioma World Summit 2026" para recuperar tu código personal de 5 caracteres.
                   </p>
                 </div>
 
