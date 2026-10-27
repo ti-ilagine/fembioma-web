@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
-import { PADRON_GRABACIONES } from '@/lib/padron-grabaciones'
+import { getRequestContext } from '@cloudflare/next-on-pages'
 
 export const runtime = 'edge'
-
-const SHAREPOINT_EXCEL_URL =
-  'https://ilagine.sharepoint.com/:x:/s/Fundacin/IQBecBBn47ttSretYmVDIPZ1AXFPKJKChnUM4lICKsNCdXo?download=1'
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +17,7 @@ export async function POST(request: Request) {
     const correoLimpio = String(correo).trim().toLowerCase()
     const codigoLimpio = String(codigo).trim().toUpperCase()
 
-    // 1. Clave maestra de TI / Administración
+    // Clave de contingencia de soporte / TI
     if (codigoLimpio === 'FEM26') {
       return NextResponse.json({
         valido: true,
@@ -29,59 +26,35 @@ export async function POST(request: Request) {
       })
     }
 
-    // 2. Validación instantánea contra el padrón base (173 participantes en memoria)
-    const encontradoLocal = PADRON_GRABACIONES.find(
-      (u) =>
-        u.correo.toLowerCase() === correoLimpio &&
-        u.codigo.toUpperCase() === codigoLimpio
-    )
+    // Consulta en milisegundos a Cloudflare D1
+    const { env } = getRequestContext()
+    const db = (env as any).DB
 
-    if (encontradoLocal) {
+    const usuario = await db
+      .prepare(
+        'SELECT nombre, correo FROM participantes WHERE LOWER(correo) = ? AND UPPER(codigo) = ?'
+      )
+      .bind(correoLimpio, codigoLimpio)
+      .first()
+
+    if (usuario) {
       return NextResponse.json({
         valido: true,
-        nombre: encontradoLocal.nombre,
-        correo: encontradoLocal.correo,
+        nombre: usuario.nombre,
+        correo: usuario.correo,
       })
     }
 
-    // 3. Consulta en vivo a SharePoint (para altas nuevas agregadas por Fundación)
-    try {
-      const resSharePoint = await fetch(SHAREPOINT_EXCEL_URL, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-        cache: 'no-store',
-      })
-
-      if (resSharePoint.ok) {
-        const textoPlano = await resSharePoint.text()
-
-        // Búsqueda de coincidencia textual de correo y código en el cuerpo del archivo
-        if (
-          textoPlano.toLowerCase().includes(correoLimpio) &&
-          textoPlano.toUpperCase().includes(codigoLimpio)
-        ) {
-          return NextResponse.json({
-            valido: true,
-            nombre: correoLimpio,
-            correo: correoLimpio,
-          })
-        }
-      }
-    } catch {
-      // Si SharePoint demora o tiene microcortes, no bloquea el sistema
-    }
-
-    // 4. Si no coincide con ninguna lista
     return NextResponse.json(
       {
         valido: false,
-        error:
-          'El correo o código de acceso no figuran en el padrón oficial. Si realizó su inscripción recientemente, contacte a eventos@fembioma.com.',
+        error: 'El correo o código ingresado no figura en el padrón activo. Contacte a soporte.',
       },
       { status: 401 }
     )
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { valido: false, error: 'Error al procesar la autenticación.' },
+      { valido: false, error: 'Error interno al validar credenciales.' },
       { status: 500 }
     )
   }
