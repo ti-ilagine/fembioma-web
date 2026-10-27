@@ -89,11 +89,12 @@ const formatSeconds = (totalSecs: number): string => {
 }
 
 interface VisorProps {
-  usuario: { correo: string; nombre: string }
+  usuario: { correo: string; nombre: string; sessionToken: string }
   onLogout: () => void
+  onExpulsado: () => void
 }
 
-const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorProps) {
+const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsado }: VisorProps) {
   const [jornadaSeleccionada, setJornadaSeleccionada] = useState<Jornada>(JORNADAS_CONGRESO[0])
   const [ponenciaActiva, setPonenciaActiva] = useState<Ponencia>(JORNADAS_CONGRESO[0].ponencias[0])
   const [isPlaying, setIsPlaying] = useState(false)
@@ -116,11 +117,10 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
   const contenedorVideoRef = useRef<HTMLDivElement>(null)
   const isReadyRef = useRef<boolean>(false)
   const timerIntervalRef = useRef<any>(null)
+  const heartbeatIntervalRef = useRef<any>(null)
 
-  // Marca de agua forense al centro: activa cada 5 minutos (300s) durante 6 segundos
   const mostrarMarcaAgua = currentTime > 15 && (currentTime % 300) < 6
 
-  // Filtrado de ponencias según término ingresado
   const ponenciasFiltradas = useMemo(() => {
     if (!busqueda.trim()) return jornadaSeleccionada.ponencias
     const q = busqueda.toLowerCase().trim()
@@ -128,6 +128,33 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
       (p) => p.titulo.toLowerCase().includes(q) || p.ponente.toLowerCase().includes(q)
     )
   }, [jornadaSeleccionada, busqueda])
+
+  // Verificación concurrente activa cada 30 segundos
+  useEffect(() => {
+    heartbeatIntervalRef.current = setInterval(async () => {
+      try {
+        const res = await fetch('/api/verificar-sesion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            correo: usuario.correo,
+            sessionToken: usuario.sessionToken,
+          }),
+        })
+        const data = await res.json()
+        if (res.ok && data.activa === false) {
+          if (playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
+            playerRef.current.pauseVideo()
+          }
+          onExpulsado()
+        }
+      } catch {}
+    }, 30000)
+
+    return () => {
+      if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current)
+    }
+  }, [usuario, onExpulsado])
 
   useEffect(() => {
     let isMounted = true
@@ -154,7 +181,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             const startSecs = timeToSeconds(ponenciaActiva.timestamp)
             if (startSecs > 0) event.target.seekTo(startSecs, true)
 
-            // Transición suave: 1.4s de splash y 700ms de desvanecimiento
             setTimeout(() => {
               setFadeSplash(true)
               setTimeout(() => setMostrarSplash(false), 700)
@@ -326,7 +352,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             ))}
           </div>
 
-          {/* CONTENEDOR DEL REPRODUCTOR CON OVERLAYS PROTECTORES */}
           <div 
             ref={contenedorVideoRef}
             className={`relative rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl select-none ${
@@ -376,14 +401,12 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
               </div>
             )}
 
-            {/* Escudo central para Play/Pause */}
             <div 
               onClick={togglePlay} 
               onContextMenu={(e) => e.preventDefault()} 
               className="absolute inset-0 z-20 cursor-pointer bg-transparent" 
             />
 
-            {/* Barra superior institucional opaca */}
             <div 
               onContextMenu={(e) => e.preventDefault()} 
               className="absolute top-0 left-0 w-full h-14 z-30 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent px-4 flex items-center justify-between pointer-events-auto"
@@ -399,14 +422,12 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
               </div>
             </div>
 
-            {/* Bloqueador del logo de YouTube */}
             <div 
               onClick={togglePlay} 
               onContextMenu={(e) => e.preventDefault()} 
               className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" 
             />
 
-            {/* Barra de controles inferior */}
             <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent p-3 pt-6 flex flex-col gap-2 text-white">
               <div className="flex items-center gap-2 w-full">
                 <span className="text-[11px] font-mono text-rose-400 shrink-0 font-medium w-14 text-right">
@@ -443,7 +464,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
                     {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-slate-300" />}
                   </button>
 
-                  {/* Selector de velocidad */}
                   <button
                     onClick={handleCambiarVelocidad}
                     className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors text-xs font-mono font-bold text-slate-200 border border-slate-700/60 flex items-center gap-1"
@@ -453,7 +473,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
                     <span>{velocidad}x</span>
                   </button>
 
-                  {/* Botón Pantalla Completa protegida */}
                   <button
                     onClick={toggleFullscreen}
                     className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors text-slate-300 hover:text-white border border-slate-700/60"
@@ -471,7 +490,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             </div>
           </div>
 
-          {/* Tarjeta de información de la ponencia activa */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 rounded-full bg-[#f06d84]/15 text-[#f06d84] text-xs font-semibold uppercase flex items-center gap-1.5">
@@ -490,7 +508,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
         </div>
 
-        {/* Panel lateral con Buscador y Lista de Sesiones */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
@@ -504,7 +521,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             </span>
           </div>
 
-          {/* Buscador en vivo de sesiones */}
           <div className="relative">
             <input
               type="text"
@@ -524,7 +540,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             )}
           </div>
 
-          {/* Listado filtrable de ponencias */}
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
             {ponenciasFiltradas.length > 0 ? (
               ponenciasFiltradas.map((p) => {
@@ -569,7 +584,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             )}
           </div>
 
-          {/* Descargo legal de propiedad intelectual */}
           <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[10px] text-slate-400 leading-relaxed">
             <span className="font-semibold text-slate-300">Aviso legal:</span> Contenido médico confidencial de uso exclusivo para el asistente registrado. Prohibida su retransmisión, grabación o distribución sin autorización expresa de FEMBIOMA e ILAGINE.
           </div>
@@ -585,8 +599,9 @@ export default function GrabacionesPage() {
   const [mostrarCodigo, setMostrarCodigo] = useState(false)
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
-  const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ correo: string; nombre: string } | null>(null)
+  const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ correo: string; nombre: string; sessionToken: string } | null>(null)
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
+  const [sesionDuplicada, setSesionDuplicada] = useState(false)
 
   // Estados del modal de recuperación
   const [modalRecuperarAbierto, setModalRecuperarAbierto] = useState(false)
@@ -644,9 +659,10 @@ export default function GrabacionesPage() {
       const data = await res.json()
 
       if (res.ok && data.valido) {
-        const payload = { correo: data.correo, nombre: data.nombre }
+        const payload = { correo: data.correo, nombre: data.nombre, sessionToken: data.sessionToken }
         setUsuarioAutenticado(payload)
         sessionStorage.setItem('fembioma_user', JSON.stringify(payload))
+        setSesionDuplicada(false)
       } else {
         setError(data.error || 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
       }
@@ -655,6 +671,12 @@ export default function GrabacionesPage() {
     } finally {
       setCargando(false)
     }
+  }
+
+  const handleExpulsadoPorConcurrencia = () => {
+    sessionStorage.removeItem('fembioma_user')
+    setUsuarioAutenticado(null)
+    setSesionDuplicada(true)
   }
 
   const handleRecuperarCodigo = async (e: React.FormEvent) => {
@@ -733,6 +755,16 @@ export default function GrabacionesPage() {
               onSubmit={handleLogin}
               className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md"
             >
+              {sesionDuplicada && (
+                <div className="mb-6 p-4 rounded-xl border-2 border-rose-500/80 bg-rose-950/50 flex items-start gap-3 text-rose-200 text-xs shadow-lg animate-in fade-in">
+                  <ShieldAlert className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+                  <div className="leading-relaxed">
+                    <span className="font-bold block text-white">Sesión iniciada en otro dispositivo</span>
+                    Se ha detectado un nuevo ingreso con tu cuenta. Para continuar aquí, vuelve a ingresar tus credenciales.
+                  </div>
+                </div>
+              )}
+
               {error && (
                 <div className="mb-6 p-4 rounded-xl border-2 border-amber-500/70 bg-amber-950/40 flex items-start gap-3 text-amber-200 text-xs shadow-lg">
                   <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
@@ -827,7 +859,6 @@ export default function GrabacionesPage() {
             </form>
           </div>
 
-          {/* Modal de consulta de código */}
           {modalRecuperarAbierto && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
               <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
@@ -895,7 +926,11 @@ export default function GrabacionesPage() {
           )}
         </div>
       ) : (
-        <VisorSesiones usuario={usuarioAutenticado} onLogout={handleLogout} />
+        <VisorSesiones 
+          usuario={usuarioAutenticado} 
+          onLogout={handleLogout} 
+          onExpulsado={handleExpulsadoPorConcurrencia}
+        />
       )}
     </div>
   )
