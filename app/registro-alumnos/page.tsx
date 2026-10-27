@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, KeyRound, Copy, Check, ShieldAlert, Sparkles } from 'lucide-react'
+import { UserPlus, KeyRound, Copy, Check, ShieldAlert, Sparkles, Smartphone, RefreshCw } from 'lucide-react'
 
 export default function RegistroAlumnosPage() {
-  const [pestana, setPestana] = useState<'registro' | 'cambio'>('registro')
+  const [pestana, setPestana] = useState<'registro' | 'cambio' | 'dispositivos'>('registro')
   const [nombre, setNombre] = useState('')
   const [correo, setCorreo] = useState('')
   const [codigoManual, setCodigoManual] = useState('')
@@ -21,6 +21,29 @@ export default function RegistroAlumnosPage() {
     setCargando(true)
 
     try {
+      // 1. Caso: Resetear Dispositivos Autorizados
+      if (pestana === 'dispositivos') {
+        const res = await fetch('/api/admin-reset-dispositivos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            correo: correo.trim().toLowerCase(),
+            pin: pin.trim(),
+          }),
+        })
+
+        const data = await res.json()
+
+        if (res.ok && data.exito) {
+          setResultado({ tipo: 'dispositivos', mensaje: data.mensaje, correo })
+          setCorreo('')
+        } else {
+          setError(data.error || 'Ocurrió un error al resetear los dispositivos.')
+        }
+        return
+      }
+
+      // 2. Casos: Nuevo Registro o Cambio de Clave
       const payload = {
         accion: pestana === 'cambio' ? 'cambiar_clave' : 'nuevo_registro',
         nombre,
@@ -38,7 +61,7 @@ export default function RegistroAlumnosPage() {
       const data = await res.json()
 
       if (res.ok) {
-        setResultado(data)
+        setResultado({ tipo: 'participante', ...data })
         setNombre('')
         setCorreo('')
         setCodigoManual('')
@@ -75,7 +98,9 @@ Por favor guarda este mensaje para tu ingreso.`
         {/* Encabezado */}
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800">
           <div className="p-3 bg-[#f06d84]/15 text-[#f06d84] rounded-2xl">
-            {pestana === 'registro' ? <UserPlus className="w-6 h-6" /> : <KeyRound className="w-6 h-6" />}
+            {pestana === 'registro' && <UserPlus className="w-6 h-6" />}
+            {pestana === 'cambio' && <KeyRound className="w-6 h-6" />}
+            {pestana === 'dispositivos' && <Smartphone className="w-6 h-6" />}
           </div>
           <div>
             <h1 className="text-xl font-serif font-bold text-white">Panel Administrativo</h1>
@@ -84,30 +109,48 @@ Por favor guarda este mensaje para tu ingreso.`
         </div>
 
         {/* Pestañas de Selección */}
-        <div className="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-800 mb-6">
+        <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 mb-6 text-center">
           <button
             type="button"
             onClick={() => { setPestana('registro'); setError(''); setResultado(null) }}
-            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
+            className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all ${
               pestana === 'registro'
                 ? 'bg-[#f06d84] text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Registrar Nuevo Alumno
+            Nuevo Alumno
           </button>
           <button
             type="button"
             onClick={() => { setPestana('cambio'); setError(''); setResultado(null) }}
-            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
+            className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all ${
               pestana === 'cambio'
                 ? 'bg-[#f06d84] text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Cambiar / Resetear Clave
+            Resetear Clave
+          </button>
+          <button
+            type="button"
+            onClick={() => { setPestana('dispositivos'); setError(''); setResultado(null) }}
+            className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all ${
+              pestana === 'dispositivos'
+                ? 'bg-[#f06d84] text-white shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Liberar Equipos
           </button>
         </div>
+
+        {/* Descripción contextual para la pestaña de dispositivos */}
+        {pestana === 'dispositivos' && (
+          <div className="mb-4 p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-[11px] text-slate-400">
+            ℹ️ Usa esta opción si un médico cambió de teléfono o computadora y el sistema le indica que alcanzó el límite de 2 terminales autorizados.
+          </div>
+        )}
 
         {error && (
           <div className="mb-5 p-4 rounded-xl border border-red-500/50 bg-red-950/40 text-red-200 text-xs flex items-center gap-3">
@@ -182,15 +225,35 @@ Por favor guarda este mensaje para tu ingreso.`
             disabled={cargando}
             className="w-full mt-2 py-3.5 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {cargando
-              ? 'Procesando en D1...'
-              : pestana === 'registro'
-              ? 'Generar y Registrar Acceso'
-              : 'Actualizar Código en D1'}
+            {cargando ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Procesando en D1...</span>
+              </>
+            ) : pestana === 'registro' ? (
+              'Generar y Registrar Acceso'
+            ) : pestana === 'cambio' ? (
+              'Actualizar Código en D1'
+            ) : (
+              'Desvincular Dispositivos del Alumno'
+            )}
           </button>
         </form>
 
-        {/* Tarjeta de resultado */}
+        {/* Tarjeta de resultado para Dispositivos Liberados */}
+        {resultado?.tipo === 'dispositivos' && (
+          <div className="mt-6 p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 space-y-2">
+            <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+              <Check className="w-4 h-4" />
+              <span>Equipos liberados exitosamente</span>
+            </div>
+            <p className="text-xs text-slate-300">
+              Se borró el historial de terminales vinculadas para <span className="font-mono text-white">{resultado.correo}</span>. El médico ya puede ingresar desde sus nuevos equipos sin restricciones.
+            </p>
+          </div>
+        )}
+
+        {/* Tarjeta de resultado para Registro / Cambio de Clave */}
         {resultado?.participante && (
           <div className="mt-6 p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 space-y-3">
             <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
