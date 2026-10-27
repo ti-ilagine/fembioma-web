@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef, memo } from 'react'
+import { useState, useEffect, useRef, memo, useMemo } from 'react'
 import { 
   Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
   ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, 
   Mail, Loader2, Eye, EyeOff, HelpCircle, X, ArrowRight,
-  Maximize, Minimize, Gauge
+  Maximize, Minimize, Gauge, Search, ShieldAlert
 } from 'lucide-react'
 
 declare global {
@@ -101,18 +101,33 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  // Transición con el logo
+  // Transición cinemática del logo
   const [mostrarSplash, setMostrarSplash] = useState(true)
   const [fadeSplash, setFadeSplash] = useState(false)
 
-  // Controles de pantalla completa y velocidad
+  // Modos de reproducción
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [velocidad, setVelocidad] = useState<number>(1)
+
+  // Buscador de ponencias
+  const [busqueda, setBusqueda] = useState('')
 
   const playerRef = useRef<any>(null)
   const contenedorVideoRef = useRef<HTMLDivElement>(null)
   const isReadyRef = useRef<boolean>(false)
   const timerIntervalRef = useRef<any>(null)
+
+  // Marca de agua forense al centro: activa cada 5 minutos (300s) durante 6 segundos
+  const mostrarMarcaAgua = currentTime > 15 && (currentTime % 300) < 6
+
+  // Filtrado de ponencias según término ingresado
+  const ponenciasFiltradas = useMemo(() => {
+    if (!busqueda.trim()) return jornadaSeleccionada.ponencias
+    const q = busqueda.toLowerCase().trim()
+    return jornadaSeleccionada.ponencias.filter(
+      (p) => p.titulo.toLowerCase().includes(q) || p.ponente.toLowerCase().includes(q)
+    )
+  }, [jornadaSeleccionada, busqueda])
 
   useEffect(() => {
     let isMounted = true
@@ -139,7 +154,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             const startSecs = timeToSeconds(ponenciaActiva.timestamp)
             if (startSecs > 0) event.target.seekTo(startSecs, true)
 
-            // Transición cinemática con el logo
+            // Transición suave: 1.4s de splash y 700ms de desvanecimiento
             setTimeout(() => {
               setFadeSplash(true)
               setTimeout(() => setMostrarSplash(false), 700)
@@ -166,7 +181,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
       initPlayer()
     }
 
-    // Escuchar cambios de fullscreen del navegador
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
     }
@@ -195,6 +209,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
 
   const handleCambiarJornada = (jornada: Jornada) => {
     setJornadaSeleccionada(jornada)
+    setBusqueda('')
     const primera = jornada.ponencias[0]
     setPonenciaActiva(primera)
 
@@ -241,7 +256,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
     }
   }
 
-  // Alternar velocidades: 1x -> 1.5x -> 2x -> 1x
   const handleCambiarVelocidad = () => {
     if (!playerRef.current || !isReadyRef.current) return
     const nuevaVelocidad = velocidad === 1 ? 1.5 : velocidad === 1.5 ? 2 : 1
@@ -249,7 +263,6 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
     setVelocidad(nuevaVelocidad)
   }
 
-  // Maximizar el contenedor protegido
   const toggleFullscreen = () => {
     if (!contenedorVideoRef.current) return
 
@@ -313,7 +326,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             ))}
           </div>
 
-          {/* CONTENEDOR PROTEGIDO DEL REPRODUCTOR */}
+          {/* CONTENEDOR DEL REPRODUCTOR CON OVERLAYS PROTECTORES */}
           <div 
             ref={contenedorVideoRef}
             className={`relative rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl select-none ${
@@ -321,6 +334,24 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             }`}
           >
             <div id="yt-player-frame" className="w-full h-full pointer-events-none" />
+
+            {/* MARCA DE AGUA FORENSE PERIÓDICA (AL CENTRO) */}
+            {mostrarMarcaAgua && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none select-none animate-in fade-in zoom-in duration-300">
+                <div className="px-5 py-3 rounded-2xl bg-slate-950/75 border border-slate-700/80 backdrop-blur-md shadow-2xl text-center space-y-1">
+                  <div className="flex items-center justify-center gap-1.5 text-rose-400 text-[10px] font-bold uppercase tracking-widest font-mono">
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    <span>Contenido Protegido · FEMBIOMA 2026</span>
+                  </div>
+                  <p className="text-xs font-mono text-slate-200 font-semibold tracking-wider">
+                    Uso exclusivo para: <span className="text-white">{usuario.correo}</span>
+                  </p>
+                  <p className="text-[9px] text-slate-400 tracking-tight">
+                    Prohibida la captura, retransmisión o duplicación total o parcial.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* CORTINA DE TRANSICIÓN CON LOGO */}
             {mostrarSplash && (
@@ -375,7 +406,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
               className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" 
             />
 
-            {/* Controles de reproducción con Scrubber, Velocidad y Pantalla Completa */}
+            {/* Barra de controles inferior */}
             <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent p-3 pt-6 flex flex-col gap-2 text-white">
               <div className="flex items-center gap-2 w-full">
                 <span className="text-[11px] font-mono text-rose-400 shrink-0 font-medium w-14 text-right">
@@ -412,17 +443,17 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
                     {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-slate-300" />}
                   </button>
 
-                  {/* BOTÓN SELECTOR DE VELOCIDAD (1x, 1.5x, 2x) */}
+                  {/* Selector de velocidad */}
                   <button
                     onClick={handleCambiarVelocidad}
                     className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors text-xs font-mono font-bold text-slate-200 border border-slate-700/60 flex items-center gap-1"
-                    title="Cambiar velocidad de reproducción"
+                    title="Velocidad de reproducción"
                   >
                     <Gauge className="w-3.5 h-3.5 text-[#f06d84]" />
                     <span>{velocidad}x</span>
                   </button>
 
-                  {/* BOTÓN MAXIMIZAR / PANTALLA COMPLETA PROTEGIDA */}
+                  {/* Botón Pantalla Completa protegida */}
                   <button
                     onClick={toggleFullscreen}
                     className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors text-slate-300 hover:text-white border border-slate-700/60"
@@ -440,6 +471,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             </div>
           </div>
 
+          {/* Tarjeta de información de la ponencia activa */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 rounded-full bg-[#f06d84]/15 text-[#f06d84] text-xs font-semibold uppercase flex items-center gap-1.5">
@@ -458,59 +490,88 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           </div>
         </div>
 
+        {/* Panel lateral con Buscador y Lista de Sesiones */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <Film className="w-4 h-4 text-[#f06d84]" />
               <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-                Ponencias del {jornadaSeleccionada.tituloJornada}
+                {jornadaSeleccionada.tituloJornada}
               </h4>
             </div>
             <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
-              {jornadaSeleccionada.ponencias.length} Sesiones
+              {ponenciasFiltradas.length} de {jornadaSeleccionada.ponencias.length}
             </span>
           </div>
 
-          <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
-            {jornadaSeleccionada.ponencias.map((p) => {
-              const estaActiva = p.id === ponenciaActiva.id
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => handleSaltarAPonencia(p)}
-                  className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
-                    estaActiva
-                      ? 'border-[#f06d84] bg-[#f06d84]/10 text-white shadow-sm'
-                      : 'border-slate-800 hover:border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div
-                    className={`p-2 rounded-lg shrink-0 mt-0.5 ${
-                      estaActiva ? 'bg-[#f06d84] text-white' : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-[#f06d84] font-mono font-medium">
-                        <Clock className="w-3 h-3" />
-                        {p.timestamp}
-                      </span>
-                      <span className="text-[10px] text-slate-500">{p.duracion}</span>
-                    </div>
-                    <p className="text-xs font-semibold leading-snug line-clamp-2 mt-1">
-                      {p.titulo}
-                    </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{p.ponente}</p>
-                  </div>
-                </button>
-              )
-            })}
+          {/* Buscador en vivo de sesiones */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar por tema o expositor..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84]"
+            />
+            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            {busqueda && (
+              <button
+                onClick={() => setBusqueda('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-400">
-            🔒 Los controles están protegidos dentro de la plataforma para garantizar la exclusividad del contenido.
+          {/* Listado filtrable de ponencias */}
+          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+            {ponenciasFiltradas.length > 0 ? (
+              ponenciasFiltradas.map((p) => {
+                const estaActiva = p.id === ponenciaActiva.id
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSaltarAPonencia(p)}
+                    className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
+                      estaActiva
+                        ? 'border-[#f06d84] bg-[#f06d84]/10 text-white shadow-sm'
+                        : 'border-slate-800 hover:border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg shrink-0 mt-0.5 ${
+                        estaActiva ? 'bg-[#f06d84] text-white' : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-[#f06d84] font-mono font-medium">
+                          <Clock className="w-3 h-3" />
+                          {p.timestamp}
+                        </span>
+                        <span className="text-[10px] text-slate-500">{p.duracion}</span>
+                      </div>
+                      <p className="text-xs font-semibold leading-snug line-clamp-2 mt-1">
+                        {p.titulo}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">{p.ponente}</p>
+                    </div>
+                  </button>
+                )
+              })
+            ) : (
+              <div className="p-6 text-center text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800/60">
+                No se encontraron ponencias con ese criterio.
+              </div>
+            )}
+          </div>
+
+          {/* Descargo legal de propiedad intelectual */}
+          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[10px] text-slate-400 leading-relaxed">
+            <span className="font-semibold text-slate-300">Aviso legal:</span> Contenido médico confidencial de uso exclusivo para el asistente registrado. Prohibida su retransmisión, grabación o distribución sin autorización expresa de FEMBIOMA e ILAGINE.
           </div>
         </div>
       </main>
@@ -527,7 +588,7 @@ export default function GrabacionesPage() {
   const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ correo: string; nombre: string } | null>(null)
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
 
-  // Estados para el Modal de Recuperar Código
+  // Estados del modal de recuperación
   const [modalRecuperarAbierto, setModalRecuperarAbierto] = useState(false)
   const [correoRecuperar, setCorreoRecuperar] = useState('')
   const [cargandoRecuperar, setCargandoRecuperar] = useState(false)
@@ -766,7 +827,7 @@ export default function GrabacionesPage() {
             </form>
           </div>
 
-          {/* MODAL DE RECUPERACIÓN / CONSULTA DE CÓDIGO */}
+          {/* Modal de consulta de código */}
           {modalRecuperarAbierto && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
               <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
