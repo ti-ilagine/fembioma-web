@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     const correoLimpio = String(correo).trim().toLowerCase()
     const codigoLimpio = String(codigo).trim().toUpperCase()
 
-    // Conexión directa a Cloudflare D1 en Edge
     const db =
       (process.env as any).DB ||
       (globalThis as any).DB ||
@@ -29,9 +28,16 @@ export async function POST(request: Request) {
       )
     }
 
-    // 1. Acceso comodín TI / Soporte
+    const ip =
+      request.headers.get('cf-connecting-ip') ||
+      request.headers.get('x-forwarded-for') ||
+      'desconocida'
+
+    // Generar identificador de sesión único
+    const nuevoToken = crypto.randomUUID()
+
+    // 1. Acceso comodín TI / Soporte (FEM26 no se pisa a sí mismo)
     if (codigoLimpio === 'FEM26') {
-      const ip = request.headers.get('cf-connecting-ip') || 'soporte'
       await db
         .prepare('INSERT INTO registro_accesos (correo, nombre, ip) VALUES (?, ?, ?)')
         .bind(correoLimpio, 'Soporte TI (FEM26)', ip)
@@ -41,6 +47,7 @@ export async function POST(request: Request) {
         valido: true,
         nombre: 'Coordinación FEMBIOMA',
         correo: correoLimpio,
+        sessionToken: 'MASTER_BYPASS',
       })
     }
 
@@ -53,17 +60,15 @@ export async function POST(request: Request) {
       .first()
 
     if (usuario) {
-      // Capturar la IP provista por Cloudflare Edge
-      const ip =
-        request.headers.get('cf-connecting-ip') ||
-        request.headers.get('x-forwarded-for') ||
-        'desconocida'
-
-      // Registrar auditoría de ingreso en D1
+      // Guardar nuevo session_token en D1 (invalida automáticamente sesiones anteriores)
       await db
-        .prepare(
-          'INSERT INTO registro_accesos (correo, nombre, ip) VALUES (?, ?, ?)'
-        )
+        .prepare('UPDATE participantes SET session_token = ? WHERE LOWER(correo) = ?')
+        .bind(nuevoToken, usuario.correo)
+        .run()
+
+      // Auditoría de ingreso
+      await db
+        .prepare('INSERT INTO registro_accesos (correo, nombre, ip) VALUES (?, ?, ?)')
         .bind(usuario.correo, usuario.nombre, ip)
         .run()
 
@@ -71,6 +76,7 @@ export async function POST(request: Request) {
         valido: true,
         nombre: usuario.nombre,
         correo: usuario.correo,
+        sessionToken: nuevoToken,
       })
     }
 
