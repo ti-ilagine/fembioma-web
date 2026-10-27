@@ -4,8 +4,8 @@ import { useState, useEffect, useRef, memo, useMemo } from 'react'
 import { 
   Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
   ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, 
-  Mail, Loader2, Eye, EyeOff, HelpCircle, X, ArrowRight,
-  Maximize, Minimize, Gauge, Search, ShieldAlert, Sparkles
+  Mail, Loader2, Eye, EyeOff, X, ArrowRight,
+  Maximize, Minimize, Gauge, Search, ShieldAlert, Sparkles, HelpCircle
 } from 'lucide-react'
 
 declare global {
@@ -635,7 +635,6 @@ export default function GrabacionesPage() {
     setIndiceFrase(0)
     setProgresoTransicion(5)
 
-    // Cambio de frases cada 2000 ms (4 frases = 8 segundos)
     const fraseInterval = setInterval(() => {
       setIndiceFrase((prev) => {
         if (prev < FRASES_TRANSICION.length - 1) return prev + 1
@@ -643,7 +642,6 @@ export default function GrabacionesPage() {
       })
     }, 2000)
 
-    // Progreso suave de la barra
     const progressInterval = setInterval(() => {
       setProgresoTransicion((prev) => {
         if (prev >= 98) return 98
@@ -651,7 +649,6 @@ export default function GrabacionesPage() {
       })
     }, 100)
 
-    // Fin de los 8 segundos exactos
     const timeoutFinal = setTimeout(() => {
       setProgresoTransicion(100)
       setTimeout(() => {
@@ -709,6 +706,13 @@ export default function GrabacionesPage() {
     sessionStorage.removeItem('fembioma_user')
     setUsuarioAutenticado(null)
     setSesionDuplicada(true)
+  }
+
+  const handleAbrirModalRecuperar = () => {
+    setErrorRecuperar('')
+    setCodigoRecuperado(null)
+    setCorreoRecuperar(correo.trim())
+    setModalRecuperarAbierto(true)
   }
 
   const handleRecuperarCodigo = async (e: React.FormEvent) => {
@@ -774,7 +778,6 @@ export default function GrabacionesPage() {
         <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 select-none animate-in fade-in duration-500">
           <div className="relative max-w-sm w-full flex flex-col items-center text-center">
             
-            {/* Logo FEMBIOMA con halo de brillo */}
             <div className="relative mb-8">
               <div className="absolute -inset-4 bg-gradient-to-r from-rose-500/20 to-fuchsia-500/20 rounded-full blur-xl animate-pulse" />
               <div className="relative p-5 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl">
@@ -786,13 +789,11 @@ export default function GrabacionesPage() {
               </div>
             </div>
 
-            {/* Subtítulo institucional */}
             <span className="text-[11px] font-semibold tracking-widest uppercase text-[#f06d84] mb-2 font-mono flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 animate-spin" />
               <span>Plataforma Oficial de Grabaciones</span>
             </span>
 
-            {/* Frase animada rotatoria cada 2 segundos */}
             <div className="h-12 flex items-center justify-center my-2">
               <p 
                 key={indiceFrase}
@@ -802,7 +803,6 @@ export default function GrabacionesPage() {
               </p>
             </div>
 
-            {/* Barra de progreso de 8 segundos */}
             <div className="w-full bg-slate-900 border border-slate-800 h-2 rounded-full overflow-hidden mt-6 mb-3 p-0.5 shadow-inner">
               <div 
                 className="h-full bg-gradient-to-r from-rose-500 via-[#f06d84] to-amber-300 rounded-full transition-all duration-150 ease-out"
@@ -834,10 +834,10 @@ export default function GrabacionesPage() {
 
             <form
               onSubmit={handleLogin}
-              className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md"
+              className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md space-y-5"
             >
               {sesionDuplicada && (
-                <div className="mb-6 p-4 rounded-xl border-2 border-rose-500/80 bg-rose-950/50 flex items-start gap-3 text-rose-200 text-xs shadow-lg animate-in fade-in">
+                <div className="p-4 rounded-xl border-2 border-rose-500/80 bg-rose-950/50 flex items-start gap-3 text-rose-200 text-xs shadow-lg animate-in fade-in">
                   <ShieldAlert className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
                   <div className="leading-relaxed">
                     <span className="font-bold block text-white">Sesión iniciada en otro dispositivo</span>
@@ -847,92 +847,99 @@ export default function GrabacionesPage() {
               )}
 
               {error && (
-                <div className="mb-6 p-4 rounded-xl border-2 border-amber-500/70 bg-amber-950/40 flex items-start gap-3 text-amber-200 text-xs shadow-lg">
+                <div className="p-4 rounded-xl border-2 border-amber-500/70 bg-amber-950/40 flex items-start gap-3 text-amber-200 text-xs shadow-lg">
                   <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
                   <span className="leading-relaxed font-medium">{error}</span>
                 </div>
               )}
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Correo Electrónico Registrado
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      required
-                      value={correo}
-                      onChange={(e) => setCorreo(e.target.value)}
-                      placeholder="tucorreo@ejemplo.com"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm"
-                    />
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
+              {/* CAMPO: CORREO */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Correo Electrónico Registrado
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    required
+                    value={correo}
+                    onChange={(e) => setCorreo(e.target.value)}
+                    placeholder="tucorreo@ejemplo.com"
+                    className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm"
+                  />
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
+              </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                      Código Personal (5 caracteres)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setModalRecuperarAbierto(true)
-                        setErrorRecuperar('')
-                        setCodigoRecuperado(null)
-                        setCorreoRecuperar(correo)
-                      }}
-                      className="text-[11px] text-[#f06d84] hover:underline flex items-center gap-1 font-medium"
-                    >
-                      <HelpCircle className="w-3 h-3" />
-                      Obtén tu código
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={mostrarCodigo ? 'text' : 'password'}
-                      required
-                      maxLength={5}
-                      value={codigoAcceso}
-                      onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
-                      placeholder="Ej. CS9TG"
-                      autoComplete="off"
-                      className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
-                    />
-                    <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <button
-                      type="button"
-                      onClick={() => setMostrarCodigo(!mostrarCodigo)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                      tabIndex={-1}
-                    >
-                      {mostrarCodigo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
+              {/* BOTÓN PROMINENTE Y DESTACADO: OBTENER CÓDIGO */}
+              <div className="p-3.5 rounded-2xl bg-[#f06d84]/10 border border-[#f06d84]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-white flex items-center justify-center sm:justify-start gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-[#f06d84]" />
+                    ¿No tienes tu código a la mano?
+                  </p>
+                  <p className="text-[11px] text-slate-400 leading-tight">
+                    Consulta tu clave de 5 caracteres con tu correo.
+                  </p>
                 </div>
-
                 <button
-                  type="submit"
-                  disabled={cargando || mostrandoTransicion}
-                  className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
+                  type="button"
+                  onClick={handleAbrirModalRecuperar}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] text-white text-xs font-bold transition-all shadow-md shadow-[#f06d84]/20 flex items-center justify-center gap-1.5 shrink-0"
                 >
-                  {cargando ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Validando en el padrón...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Ingresar a las Grabaciones</span>
-                    </>
-                  )}
+                  <span>Obtener mi código</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+              {/* CAMPO: CÓDIGO */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Código Personal (5 caracteres)
+                </label>
+                <div className="relative">
+                  <input
+                    type={mostrarCodigo ? 'text' : 'password'}
+                    required
+                    maxLength={5}
+                    value={codigoAcceso}
+                    onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
+                    placeholder="Ej. CS9TG"
+                    autoComplete="off"
+                    className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
+                  />
+                  <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarCodigo(!mostrarCodigo)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                    tabIndex={-1}
+                  >
+                    {mostrarCodigo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* BOTÓN INGRESAR */}
+              <button
+                type="submit"
+                disabled={cargando || mostrandoTransicion}
+                className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {cargando ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Validando en el padrón...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Ingresar a las Grabaciones</span>
+                  </>
+                )}
+              </button>
+
+              <div className="pt-4 border-t border-slate-800 text-center">
                 <p className="text-[11px] text-slate-500">
                   ¿Problemas con tu acceso? Contáctanos a <span className="text-slate-400">eventos@fembioma.com</span>
                 </p>
@@ -940,6 +947,7 @@ export default function GrabacionesPage() {
             </form>
           </div>
 
+          {/* MODAL DE RECUPERACIÓN / CONSULTA DE CÓDIGO */}
           {modalRecuperarAbierto && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
               <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
