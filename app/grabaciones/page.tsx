@@ -4,8 +4,8 @@ import { useState, useEffect, useRef, memo, useMemo } from 'react'
 import { 
   Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
   ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, 
-  Mail, Loader2, Eye, EyeOff, X, ArrowRight,
-  Maximize, Minimize, Gauge, Search, ShieldAlert, Sparkles, HelpCircle
+  Mail, Loader2, Eye, EyeOff, Maximize, Minimize, Gauge, Search, 
+  ShieldAlert, Sparkles, ArrowRight, Check
 } from 'lucide-react'
 
 declare global {
@@ -577,6 +577,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout, onExpulsa
 export default function GrabacionesPage() {
   const [correo, setCorreo] = useState('')
   const [codigoAcceso, setCodigoAcceso] = useState('')
+  const [mostrarCampoCodigo, setMostrarCampoCodigo] = useState(false)
   const [mostrarCodigo, setMostrarCodigo] = useState(false)
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -584,18 +585,14 @@ export default function GrabacionesPage() {
   const [tiempoExpirado, setTiempoExpirado] = useState(false)
   const [sesionDuplicada, setSesionDuplicada] = useState(false)
 
-  // ESTADOS DE LA TRANSICIÓN CINEMÁTICA DE 8 SEGUNDOS
+  // Mensaje de éxito al identificar Código automáticamente
+  const [codigoEncontrado, setCodigoEncontrado] = useState<{ nombre: string; codigo: string } | null>(null)
+
+  // Transición de 8 segundos
   const [mostrandoTransicion, setMostrandoTransicion] = useState(false)
   const [indiceFrase, setIndiceFrase] = useState(0)
   const [progresoTransicion, setProgresoTransicion] = useState(0)
   const [datosPendientes, setDatosPendientes] = useState<any>(null)
-
-  // Modal de recuperación
-  const [modalRecuperarAbierto, setModalRecuperarAbierto] = useState(false)
-  const [correoRecuperar, setCorreoRecuperar] = useState('')
-  const [cargandoRecuperar, setCargandoRecuperar] = useState(false)
-  const [errorRecuperar, setErrorRecuperar] = useState('')
-  const [codigoRecuperado, setCodigoRecuperado] = useState<{ nombre: string; codigo: string } | null>(null)
 
   useEffect(() => {
     if (new Date() > FECHA_LIMITE) setTiempoExpirado(true)
@@ -628,7 +625,7 @@ export default function GrabacionesPage() {
     }
   }, [])
 
-  // Secuencia de 8 segundos (cambio de frases cada 2s y progreso suave)
+  // Temporizador de transición de 8 segundos
   useEffect(() => {
     if (!mostrandoTransicion) return
 
@@ -636,17 +633,11 @@ export default function GrabacionesPage() {
     setProgresoTransicion(5)
 
     const fraseInterval = setInterval(() => {
-      setIndiceFrase((prev) => {
-        if (prev < FRASES_TRANSICION.length - 1) return prev + 1
-        return prev
-      })
+      setIndiceFrase((prev) => (prev < FRASES_TRANSICION.length - 1 ? prev + 1 : prev))
     }, 2000)
 
     const progressInterval = setInterval(() => {
-      setProgresoTransicion((prev) => {
-        if (prev >= 98) return 98
-        return prev + 1.25
-      })
+      setProgresoTransicion((prev) => (prev >= 98 ? 98 : prev + 1.25))
     }, 100)
 
     const timeoutFinal = setTimeout(() => {
@@ -667,36 +658,61 @@ export default function GrabacionesPage() {
     }
   }, [mostrandoTransicion, datosPendientes])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Ingreso directo e inteligente: si no puso código, el sistema lo busca y valida en un solo paso
+  const handleIngresoDirecto = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setCodigoEncontrado(null)
     setCargando(true)
 
-    try {
-      const devId = obtenerIdDispositivo()
+    const correoLimpio = correo.trim().toLowerCase()
+    let codigoFinal = codigoAcceso.trim().toUpperCase()
 
-      const res = await fetch('/api/validar-acceso', {
+    try {
+      // 1. Si no tiene código escrito, lo consultamos en D1 automáticamente con su correo
+      if (!codigoFinal) {
+        const resConsulta = await fetch('/api/recuperar-codigo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo: correoLimpio }),
+        })
+        const dataConsulta = await resConsulta.json()
+
+        if (!resConsulta.ok || !dataConsulta.exito) {
+          setError(dataConsulta.error || 'El correo ingresado no figura en el padrón activo.')
+          setCargando(false)
+          return
+        }
+
+        codigoFinal = dataConsulta.codigo
+        setCodigoAcceso(codigoFinal)
+        setCodigoEncontrado({ nombre: dataConsulta.nombre, codigo: dataConsulta.codigo })
+      }
+
+      // 2. Validación y registro del dispositivo
+      const devId = obtenerIdDispositivo()
+      const resAcceso = await fetch('/api/validar-acceso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          correo: correo.trim().toLowerCase(),
-          codigo: codigoAcceso.trim().toUpperCase(),
+          correo: correoLimpio,
+          codigo: codigoFinal,
           deviceId: devId,
         }),
       })
 
-      const data = await res.json()
+      const dataAcceso = await resAcceso.json()
 
-      if (res.ok && data.valido) {
-        const payload = { correo: data.correo, nombre: data.nombre, sessionToken: data.sessionToken }
+      if (resAcceso.ok && dataAcceso.valido) {
+        const payload = { correo: dataAcceso.correo, nombre: dataAcceso.nombre, sessionToken: dataAcceso.sessionToken }
         setDatosPendientes(payload)
         setSesionDuplicada(false)
         setMostrandoTransicion(true)
       } else {
-        setError(data.error || 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
+        setError(dataAcceso.error || 'El correo o el código no son válidos.')
       }
     } catch {
-      setError('El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
+      setError('Error de comunicación con el servidor. Por favor intente nuevamente.')
     } finally {
       setCargando(false)
     }
@@ -708,52 +724,12 @@ export default function GrabacionesPage() {
     setSesionDuplicada(true)
   }
 
-  const handleAbrirModalRecuperar = () => {
-    setErrorRecuperar('')
-    setCodigoRecuperado(null)
-    setCorreoRecuperar(correo.trim())
-    setModalRecuperarAbierto(true)
-  }
-
-  const handleRecuperarCodigo = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrorRecuperar('')
-    setCodigoRecuperado(null)
-    setCargandoRecuperar(true)
-
-    try {
-      const res = await fetch('/api/recuperar-codigo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: correoRecuperar.trim().toLowerCase() }),
-      })
-      const data = await res.json()
-
-      if (res.ok && data.exito) {
-        setCodigoRecuperado({ nombre: data.nombre, codigo: data.codigo })
-      } else {
-        setErrorRecuperar(data.error || 'El correo ingresado no figura en el padrón activo.')
-      }
-    } catch {
-      setErrorRecuperar('Error al consultar. Por favor intente nuevamente.')
-    } finally {
-      setCargandoRecuperar(false)
-    }
-  }
-
-  const aplicarCodigoRecuperado = () => {
-    if (!codigoRecuperado) return
-    setCorreo(correoRecuperar.trim().toLowerCase())
-    setCodigoAcceso(codigoRecuperado.codigo)
-    setModalRecuperarAbierto(false)
-    setError('')
-  }
-
   const handleLogout = () => {
     sessionStorage.removeItem('fembioma_user')
     setUsuarioAutenticado(null)
     setCorreo('')
     setCodigoAcceso('')
+    setCodigoEncontrado(null)
   }
 
   if (tiempoExpirado) {
@@ -773,7 +749,7 @@ export default function GrabacionesPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-[#f06d84]/30">
       
-      {/* PANTALLA DE TRANSICIÓN CINEMÁTICA DE 8 SEGUNDOS */}
+      {/* PANTALLA DE TRANSICIÓN DE 8 SEGUNDOS */}
       {mostrandoTransicion && (
         <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 select-none animate-in fade-in duration-500">
           <div className="relative max-w-sm w-full flex flex-col items-center text-center">
@@ -820,6 +796,7 @@ export default function GrabacionesPage() {
       {!usuarioAutenticado ? (
         <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12">
           <div className="w-full max-w-md">
+            
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#f06d84]/15 border border-[#f06d84]/30 text-[#f06d84] mb-4">
                 <Lock className="w-6 h-6" />
@@ -828,12 +805,12 @@ export default function GrabacionesPage() {
                 Grabaciones FEMBIOMA 2026
               </h1>
               <p className="text-sm text-slate-400 mt-2">
-                Ingreso exclusivo para participantes. Digita tu correo registrado y tu código personal de 5 caracteres.
+                Ingreso exclusivo para participantes. Digita tu correo registrado para acceder de inmediato.
               </p>
             </div>
 
             <form
-              onSubmit={handleLogin}
+              onSubmit={handleIngresoDirecto}
               className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md space-y-5"
             >
               {sesionDuplicada && (
@@ -841,7 +818,7 @@ export default function GrabacionesPage() {
                   <ShieldAlert className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
                   <div className="leading-relaxed">
                     <span className="font-bold block text-white">Sesión iniciada en otro dispositivo</span>
-                    Se ha detectado un nuevo ingreso con tu cuenta. Para continuar aquí, vuelve a ingresar tus credenciales.
+                    Se ha detectado un nuevo ingreso con tu cuenta. Para continuar aquí, vuelve a ingresar tu correo.
                   </div>
                 </div>
               )}
@@ -853,7 +830,18 @@ export default function GrabacionesPage() {
                 </div>
               )}
 
-              {/* CAMPO: CORREO */}
+              {/* Mensaje de confirmación instantánea */}
+              {codigoEncontrado && (
+                <div className="p-3.5 rounded-2xl bg-emerald-950/50 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-white block">¡Hola, {codigoEncontrado.nombre}!</span>
+                    <span>Código verificado: <strong className="font-mono text-[#f06d84]">{codigoEncontrado.codigo}</strong></span>
+                  </div>
+                  <Check className="w-5 h-5 text-emerald-400" />
+                </div>
+              )}
+
+              {/* CAMPO PRINCIPAL: CORREO ELECTRÓNICO */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                   Correo Electrónico Registrado
@@ -871,65 +859,64 @@ export default function GrabacionesPage() {
                 </div>
               </div>
 
-              {/* BOTÓN PROMINENTE Y DESTACADO: OBTENER CÓDIGO */}
-              <div className="p-3.5 rounded-2xl bg-[#f06d84]/10 border border-[#f06d84]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-                <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-white flex items-center justify-center sm:justify-start gap-1.5">
-                    <KeyRound className="w-3.5 h-3.5 text-[#f06d84]" />
-                    ¿No tienes tu código a la mano?
-                  </p>
-                  <p className="text-[11px] text-slate-400 leading-tight">
-                    Consulta tu clave de 5 caracteres con tu correo.
-                  </p>
+              {/* CAMPO OPCIONAL / SECUNDARIO: CÓDIGO */}
+              {mostrarCampoCodigo ? (
+                <div className="animate-in fade-in duration-300">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Código Personal (5 caracteres)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => { setMostrarCampoCodigo(false); setCodigoAcceso('') }}
+                      className="text-[11px] text-slate-500 hover:text-slate-300"
+                    >
+                      Ocultar
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={mostrarCodigo ? 'text' : 'password'}
+                      maxLength={5}
+                      value={codigoAcceso}
+                      onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
+                      placeholder="Ej. CS9TG"
+                      autoComplete="off"
+                      className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
+                    />
+                    <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <button
+                      type="button"
+                      onClick={() => setMostrarCodigo(!mostrarCodigo)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                      tabIndex={-1}
+                    >
+                      {mostrarCodigo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAbrirModalRecuperar}
-                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] text-white text-xs font-bold transition-all shadow-md shadow-[#f06d84]/20 flex items-center justify-center gap-1.5 shrink-0"
-                >
-                  <span>Obtener mi código</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* CAMPO: CÓDIGO */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                  Código Personal (5 caracteres)
-                </label>
-                <div className="relative">
-                  <input
-                    type={mostrarCodigo ? 'text' : 'password'}
-                    required
-                    maxLength={5}
-                    value={codigoAcceso}
-                    onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
-                    placeholder="Ej. CS9TG"
-                    autoComplete="off"
-                    className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
-                  />
-                  <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              ) : (
+                <div className="text-right">
                   <button
                     type="button"
-                    onClick={() => setMostrarCodigo(!mostrarCodigo)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                    tabIndex={-1}
+                    onClick={() => setMostrarCampoCodigo(true)}
+                    className="text-[11px] text-slate-400 hover:text-[#f06d84] transition-colors underline"
                   >
-                    {mostrarCodigo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    ¿Ya conoces tu Código? Ingrésalo manualmente
                   </button>
                 </div>
-              </div>
+              )}
 
-              {/* BOTÓN INGRESAR */}
+              {/* BOTÓN PRINCIPAL: UN SOLO CLIC */}
               <button
                 type="submit"
                 disabled={cargando || mostrandoTransicion}
-                className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-4 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {cargando ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Validando en el padrón...</span>
+                    <span>Verificando tu acceso en el padrón...</span>
                   </>
                 ) : (
                   <>
@@ -946,73 +933,6 @@ export default function GrabacionesPage() {
               </div>
             </form>
           </div>
-
-          {/* MODAL DE RECUPERACIÓN / CONSULTA DE CÓDIGO */}
-          {modalRecuperarAbierto && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-              <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-                <button
-                  onClick={() => setModalRecuperarAbierto(false)}
-                  className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                <div className="text-center pt-2">
-                  <div className="inline-flex p-2.5 bg-[#f06d84]/15 text-[#f06d84] rounded-xl mb-2">
-                    <KeyRound className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-lg font-serif font-bold text-white">Consulta tu Código</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Ingresa el correo con el que te registraste en el "Fembioma World Summit 2026" para recuperar tu código personal de 5 caracteres.
-                  </p>
-                </div>
-
-                {errorRecuperar && (
-                  <div className="p-3 rounded-xl border border-amber-500/50 bg-amber-950/40 text-amber-200 text-xs">
-                    {errorRecuperar}
-                  </div>
-                )}
-
-                {!codigoRecuperado ? (
-                  <form onSubmit={handleRecuperarCodigo} className="space-y-3">
-                    <input
-                      type="email"
-                      required
-                      placeholder="tucorreo@ejemplo.com"
-                      value={correoRecuperar}
-                      onChange={(e) => setCorreoRecuperar(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-xs focus:border-[#f06d84] focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      disabled={cargandoRecuperar}
-                      className="w-full py-2.5 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-xs transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {cargandoRecuperar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Consultar Código'}
-                    </button>
-                  </form>
-                ) : (
-                  <div className="space-y-3 text-center bg-emerald-950/40 border border-emerald-500/50 p-4 rounded-2xl">
-                    <p className="text-xs text-emerald-300 font-medium">¡Hola, {codigoRecuperado.nombre}!</p>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block mb-0.5">Tu código de acceso:</span>
-                      <span className="text-2xl font-mono font-bold tracking-widest text-[#f06d84]">
-                        {codigoRecuperado.codigo}
-                      </span>
-                    </div>
-                    <button
-                      onClick={aplicarCodigoRecuperado}
-                      className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-700"
-                    >
-                      <span>Usar y Volver al Login</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       ) : (
         <VisorSesiones 
