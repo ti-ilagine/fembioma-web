@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, memo } from 'react'
 import { 
   Lock, Play, Pause, Volume2, VolumeX, AlertTriangle, 
   ShieldCheck, LogOut, Film, KeyRound, Clock, User, CheckCircle2, 
-  Mail, Loader2, Eye, EyeOff, HelpCircle, X, ArrowRight 
+  Mail, Loader2, Eye, EyeOff, HelpCircle, X, ArrowRight,
+  Maximize, Minimize, Gauge
 } from 'lucide-react'
 
 declare global {
@@ -100,7 +101,16 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
+  // Transición con el logo
+  const [mostrarSplash, setMostrarSplash] = useState(true)
+  const [fadeSplash, setFadeSplash] = useState(false)
+
+  // Controles de pantalla completa y velocidad
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [velocidad, setVelocidad] = useState<number>(1)
+
   const playerRef = useRef<any>(null)
+  const contenedorVideoRef = useRef<HTMLDivElement>(null)
   const isReadyRef = useRef<boolean>(false)
   const timerIntervalRef = useRef<any>(null)
 
@@ -117,7 +127,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
           modestbranding: 1,
           controls: 0,
           disablekb: 1,
-          fs: 1,
+          fs: 0,
           iv_load_policy: 3,
           enablejsapi: 1,
           origin: typeof window !== 'undefined' ? window.location.origin : ''
@@ -128,6 +138,12 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
             setDuration(Math.floor(event.target.getDuration() || 0))
             const startSecs = timeToSeconds(ponenciaActiva.timestamp)
             if (startSecs > 0) event.target.seekTo(startSecs, true)
+
+            // Transición cinemática con el logo
+            setTimeout(() => {
+              setFadeSplash(true)
+              setTimeout(() => setMostrarSplash(false), 700)
+            }, 1400)
           },
           onStateChange: (event: any) => {
             if (event.data === 1) setIsPlaying(true)
@@ -150,6 +166,12 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
       initPlayer()
     }
 
+    // Escuchar cambios de fullscreen del navegador
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+
     timerIntervalRef.current = setInterval(() => {
       if (playerRef.current && isReadyRef.current && typeof playerRef.current.getCurrentTime === 'function') {
         const cur = Math.floor(playerRef.current.getCurrentTime())
@@ -161,6 +183,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
 
     return () => {
       isMounted = false
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
       if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         playerRef.current.destroy()
@@ -180,6 +203,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
         videoId: jornada.youtubeId,
         startSeconds: timeToSeconds(primera.timestamp)
       })
+      playerRef.current.setPlaybackRate(velocidad)
     }
   }
 
@@ -190,6 +214,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
     if (playerRef.current && isReadyRef.current && typeof playerRef.current.seekTo === 'function') {
       playerRef.current.seekTo(segs, true)
       playerRef.current.playVideo()
+      playerRef.current.setPlaybackRate(velocidad)
       setIsPlaying(true)
     }
   }
@@ -216,532 +241,7 @@ const VisorSesiones = memo(function VisorSesiones({ usuario, onLogout }: VisorPr
     }
   }
 
-  const handleSeekSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nuevoSegundo = Number(e.target.value)
-    setCurrentTime(nuevoSegundo)
-    if (playerRef.current && isReadyRef.current && typeof playerRef.current.seekTo === 'function') {
-      playerRef.current.seekTo(nuevoSegundo, true)
-    }
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <h2 className="text-xs sm:text-sm font-semibold tracking-wide uppercase text-slate-300">
-              FEMBIOMA World Summit 2026 · Sesión Activa: <span className="text-white font-mono">{usuario.correo}</span>
-            </h2>
-          </div>
-          <h1 className="text-lg sm:text-2xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-fuchsia-300 to-amber-200 mt-0.5">
-            ¡Bienvenido(a), {usuario.nombre}!
-          </h1>
-        </div>
-
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 text-xs transition-colors shrink-0"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Salir
-        </button>
-      </header>
-
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
-            {JORNADAS_CONGRESO.map((jornada) => (
-              <button
-                key={jornada.diaId}
-                onClick={() => handleCambiarJornada(jornada)}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-                  jornadaSeleccionada.diaId === jornada.diaId
-                    ? 'bg-[#f06d84] text-white shadow-md shadow-[#f06d84]/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
-              >
-                <span>{jornada.tituloJornada}</span>
-                <span className="hidden sm:inline text-[11px] opacity-80 ml-2 font-normal">
-                  ({jornada.fechaTexto.split(',')[0]})
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl select-none">
-            <div id="yt-player-frame" className="w-full h-full pointer-events-none" />
-
-            <div 
-              onClick={togglePlay} 
-              onContextMenu={(e) => e.preventDefault()} 
-              className="absolute inset-0 z-20 cursor-pointer bg-transparent" 
-            />
-
-            {/* Barra superior institucional opaca */}
-            <div 
-              onContextMenu={(e) => e.preventDefault()} 
-              className="absolute top-0 left-0 w-full h-14 z-30 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent px-4 flex items-center justify-between pointer-events-auto"
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-rose-500" />
-                <span className="font-serif text-xs sm:text-sm font-bold tracking-widest uppercase text-white drop-shadow">
-                  FEMBIOMA WORLD SUMMIT 2026
-                </span>
-              </div>
-              <div className="select-none bg-slate-900/90 border border-slate-700/60 px-2.5 py-1 rounded text-[10px] tracking-wide text-slate-300 font-mono">
-                {usuario.correo}
-              </div>
-            </div>
-
-            {/* Bloqueador del logo de YouTube */}
-            <div 
-              onClick={togglePlay} 
-              onContextMenu={(e) => e.preventDefault()} 
-              className="absolute bottom-0 right-0 w-44 h-16 z-30 pointer-events-auto bg-transparent cursor-pointer" 
-            />
-
-            {/* Controles de reproducción con scrubber */}
-            <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent p-3 pt-6 flex flex-col gap-2 text-white">
-              <div className="flex items-center gap-2 w-full">
-                <span className="text-[11px] font-mono text-rose-400 shrink-0 font-medium w-14 text-right">
-                  {formatSeconds(currentTime)}
-                </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={duration || 100}
-                  value={currentTime}
-                  onChange={handleSeekSlider}
-                  className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#f06d84]"
-                />
-                <span className="text-[11px] font-mono text-slate-400 shrink-0 font-medium w-14">
-                  {formatSeconds(duration)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={togglePlay}
-                    className="p-2 rounded-lg bg-[#f06d84] hover:bg-[#e05a72] transition-colors shadow-sm"
-                    aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                  </button>
-
-                  <button
-                    onClick={toggleMute}
-                    className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors"
-                    aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-slate-300" />}
-                  </button>
-                </div>
-
-                <div className="text-[11px] text-slate-300 font-medium truncate max-w-[280px] sm:max-w-md">
-                  Sesión: <span className="text-white font-semibold">{ponenciaActiva.titulo}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#f06d84]/15 text-[#f06d84] text-xs font-semibold uppercase flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Inicio en video: {ponenciaActiva.timestamp}
-              </span>
-              <span className="text-xs text-slate-400">· Duración estimada: {ponenciaActiva.duracion}</span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-serif font-bold text-white leading-snug">
-              {ponenciaActiva.titulo}
-            </h3>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-300 font-medium">
-              <User className="w-3.5 h-3.5 text-[#f06d84]" />
-              <span>{ponenciaActiva.ponente}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
-              <Film className="w-4 h-4 text-[#f06d84]" />
-              <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-                Ponencias del {jornadaSeleccionada.tituloJornada}
-              </h4>
-            </div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
-              {jornadaSeleccionada.ponencias.length} Sesiones
-            </span>
-          </div>
-
-          <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
-            {jornadaSeleccionada.ponencias.map((p) => {
-              const estaActiva = p.id === ponenciaActiva.id
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => handleSaltarAPonencia(p)}
-                  className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
-                    estaActiva
-                      ? 'border-[#f06d84] bg-[#f06d84]/10 text-white shadow-sm'
-                      : 'border-slate-800 hover:border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div
-                    className={`p-2 rounded-lg shrink-0 mt-0.5 ${
-                      estaActiva ? 'bg-[#f06d84] text-white' : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-[#f06d84] font-mono font-medium">
-                        <Clock className="w-3 h-3" />
-                        {p.timestamp}
-                      </span>
-                      <span className="text-[10px] text-slate-500">{p.duracion}</span>
-                    </div>
-                    <p className="text-xs font-semibold leading-snug line-clamp-2 mt-1">
-                      {p.titulo}
-                    </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{p.ponente}</p>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-400">
-            🔒 Los controles están protegidos dentro de la plataforma para garantizar la exclusividad del contenido.
-          </div>
-        </div>
-      </main>
-    </div>
-  )
-})
-
-export default function GrabacionesPage() {
-  const [correo, setCorreo] = useState('')
-  const [codigoAcceso, setCodigoAcceso] = useState('')
-  const [mostrarCodigo, setMostrarCodigo] = useState(false)
-  const [error, setError] = useState('')
-  const [cargando, setCargando] = useState(false)
-  const [usuarioAutenticado, setUsuarioAutenticado] = useState<{ correo: string; nombre: string } | null>(null)
-  const [tiempoExpirado, setTiempoExpirado] = useState(false)
-
-  // Estados para el Modal de Recuperar Código
-  const [modalRecuperarAbierto, setModalRecuperarAbierto] = useState(false)
-  const [correoRecuperar, setCorreoRecuperar] = useState('')
-  const [cargandoRecuperar, setCargandoRecuperar] = useState(false)
-  const [errorRecuperar, setErrorRecuperar] = useState('')
-  const [codigoRecuperado, setCodigoRecuperado] = useState<{ nombre: string; codigo: string } | null>(null)
-
-  useEffect(() => {
-    if (new Date() > FECHA_LIMITE) setTiempoExpirado(true)
-
-    const sesion = sessionStorage.getItem('fembioma_user')
-    if (sesion) {
-      try {
-        setUsuarioAutenticado(JSON.parse(sesion))
-      } catch {
-        sessionStorage.removeItem('fembioma_user')
-      }
-    }
-
-    const handleContextMenu = (e: MouseEvent) => e.preventDefault()
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === 'F12' ||
-        (e.ctrlKey && (e.key === 'u' || e.key === 'U' || (e.shiftKey && (e.key === 'I' || e.key === 'J'))))
-      ) {
-        e.preventDefault()
-      }
-    }
-
-    window.addEventListener('contextmenu', handleContextMenu)
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('contextmenu', handleContextMenu)
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [])
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setCargando(true)
-
-    try {
-      const res = await fetch('/api/validar-acceso', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          correo: correo.trim().toLowerCase(),
-          codigo: codigoAcceso.trim().toUpperCase(),
-        }),
-      })
-
-      const data = await res.json()
-
-      if (res.ok && data.valido) {
-        const payload = { correo: data.correo, nombre: data.nombre }
-        setUsuarioAutenticado(payload)
-        sessionStorage.setItem('fembioma_user', JSON.stringify(payload))
-      } else {
-        setError(data.error || 'El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
-      }
-    } catch {
-      setError('El correo o el código de acceso no son válidos. Si cree que es un error contacte a eventos@fembioma.com.')
-    } finally {
-      setCargando(false)
-    }
-  }
-
-  const handleRecuperarCodigo = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrorRecuperar('')
-    setCodigoRecuperado(null)
-    setCargandoRecuperar(true)
-
-    try {
-      const res = await fetch('/api/recuperar-codigo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: correoRecuperar.trim().toLowerCase() }),
-      })
-      const data = await res.json()
-
-      if (res.ok && data.exito) {
-        setCodigoRecuperado({ nombre: data.nombre, codigo: data.codigo })
-      } else {
-        setErrorRecuperar(data.error || 'El correo ingresado no figura en el padrón activo.')
-      }
-    } catch {
-      setErrorRecuperar('Error al consultar. Por favor intente nuevamente.')
-    } finally {
-      setCargandoRecuperar(false)
-    }
-  }
-
-  const aplicarCodigoRecuperado = () => {
-    if (!codigoRecuperado) return
-    setCorreo(correoRecuperar.trim().toLowerCase())
-    setCodigoAcceso(codigoRecuperado.codigo)
-    setModalRecuperarAbierto(false)
-    setError('')
-  }
-
-  const handleLogout = () => {
-    sessionStorage.removeItem('fembioma_user')
-    setUsuarioAutenticado(null)
-    setCorreo('')
-    setCodigoAcceso('')
-  }
-
-  if (tiempoExpirado) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl">
-          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-serif font-bold text-white mb-2">Acceso Finalizado</h1>
-          <p className="text-sm text-slate-400">
-            El periodo oficial para la visualización de las grabaciones del FEMBIOMA World Summit 2026 ha concluido.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-[#f06d84]/30">
-      {!usuarioAutenticado ? (
-        <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#f06d84]/15 border border-[#f06d84]/30 text-[#f06d84] mb-4">
-                <Lock className="w-6 h-6" />
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-white">
-                Grabaciones FEMBIOMA 2026
-              </h1>
-              <p className="text-sm text-slate-400 mt-2">
-                Ingreso exclusivo para participantes. Digita tu correo registrado y tu código personal de 5 caracteres.
-              </p>
-            </div>
-
-            <form
-              onSubmit={handleLogin}
-              className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md"
-            >
-              {error && (
-                <div className="mb-6 p-4 rounded-xl border-2 border-amber-500/70 bg-amber-950/40 flex items-start gap-3 text-amber-200 text-xs shadow-lg">
-                  <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
-                  <span className="leading-relaxed font-medium">{error}</span>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Correo Electrónico Registrado
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      required
-                      value={correo}
-                      onChange={(e) => setCorreo(e.target.value)}
-                      placeholder="tucorreo@ejemplo.com"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm"
-                    />
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                      Código Personal (5 caracteres)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setModalRecuperarAbierto(true)
-                        setErrorRecuperar('')
-                        setCodigoRecuperado(null)
-                        setCorreoRecuperar(correo)
-                      }}
-                      className="text-[11px] text-[#f06d84] hover:underline flex items-center gap-1 font-medium"
-                    >
-                      <HelpCircle className="w-3 h-3" />
-                      Obtén tu código
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={mostrarCodigo ? 'text' : 'password'}
-                      required
-                      maxLength={5}
-                      value={codigoAcceso}
-                      onChange={(e) => setCodigoAcceso(e.target.value.toUpperCase())}
-                      placeholder="Ej. CS9TG"
-                      autoComplete="off"
-                      className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-slate-950 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#f06d84] focus:ring-1 focus:ring-[#f06d84] text-sm uppercase tracking-widest font-mono text-center font-bold"
-                    />
-                    <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <button
-                      type="button"
-                      onClick={() => setMostrarCodigo(!mostrarCodigo)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                      tabIndex={-1}
-                    >
-                      {mostrarCodigo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={cargando}
-                  className="w-full py-4 mt-2 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-lg shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {cargando ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Validando en el padrón...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Ingresar a las Grabaciones</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-800 text-center">
-                <p className="text-[11px] text-slate-500">
-                  ¿Problemas con tu acceso? Contáctanos a <span className="text-slate-400">eventos@fembioma.com</span>
-                </p>
-              </div>
-            </form>
-          </div>
-
-          {/* MODAL DE RECUPERACIÓN / CONSULTA DE CÓDIGO */}
-          {modalRecuperarAbierto && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-              <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-                <button
-                  onClick={() => setModalRecuperarAbierto(false)}
-                  className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                <div className="text-center pt-2">
-                  <div className="inline-flex p-2.5 bg-[#f06d84]/15 text-[#f06d84] rounded-xl mb-2">
-                    <KeyRound className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-lg font-serif font-bold text-white">Consulta tu Código</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Ingresa el correo con el que te registraste en el "Fembioma World Summit 2026" para recuperar tu código personal de 5 caracteres.
-                  </p>
-                </div>
-
-                {errorRecuperar && (
-                  <div className="p-3 rounded-xl border border-amber-500/50 bg-amber-950/40 text-amber-200 text-xs">
-                    {errorRecuperar}
-                  </div>
-                )}
-
-                {!codigoRecuperado ? (
-                  <form onSubmit={handleRecuperarCodigo} className="space-y-3">
-                    <input
-                      type="email"
-                      required
-                      placeholder="tucorreo@ejemplo.com"
-                      value={correoRecuperar}
-                      onChange={(e) => setCorreoRecuperar(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-xs focus:border-[#f06d84] focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      disabled={cargandoRecuperar}
-                      className="w-full py-2.5 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-xs transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {cargandoRecuperar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Consultar Código'}
-                    </button>
-                  </form>
-                ) : (
-                  <div className="space-y-3 text-center bg-emerald-950/40 border border-emerald-500/50 p-4 rounded-2xl">
-                    <p className="text-xs text-emerald-300 font-medium">¡Hola, {codigoRecuperado.nombre}!</p>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block mb-0.5">Tu código de acceso:</span>
-                      <span className="text-2xl font-mono font-bold tracking-widest text-[#f06d84]">
-                        {codigoRecuperado.codigo}
-                      </span>
-                    </div>
-                    <button
-                      onClick={aplicarCodigoRecuperado}
-                      className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-700"
-                    >
-                      <span>Usar y Volver al Login</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <VisorSesiones usuario={usuarioAutenticado} onLogout={handleLogout} />
-      )}
-    </div>
-  )
-}
+  // Alternar velocidades: 1x -> 1.5x -> 2x -> 1x
+  const handleCambiarVelocidad = () => {
+    if (!playerRef.current || !isReadyRef.current) return
+    const nuevaVelocidad = velocidad === 1 ? 1.5 : velocidad === 1.5 ?
