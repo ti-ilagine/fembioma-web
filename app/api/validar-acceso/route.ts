@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { getRequestContext } from '@cloudflare/next-on-pages'
 
 export const runtime = 'edge'
 
@@ -26,9 +25,18 @@ export async function POST(request: Request) {
       })
     }
 
-    // Consulta directa a la base de datos D1
-    const { env } = getRequestContext()
-    const db = (env as any).DB
+    // Obtención del binding D1 compatible con Cloudflare Pages Edge
+    const db =
+      (process.env as any).DB ||
+      (globalThis as any).DB ||
+      (globalThis as any).__env__?.DB
+
+    if (!db) {
+      return NextResponse.json(
+        { valido: false, error: 'Error de configuración en base de datos.' },
+        { status: 500 }
+      )
+    }
 
     const usuario = await db
       .prepare(
