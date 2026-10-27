@@ -4,7 +4,7 @@ export const runtime = 'edge'
 
 export async function POST(request: Request) {
   try {
-    const { correo, codigo } = await request.json()
+    const { correo, codigo, deviceId } = await request.json()
 
     if (!correo || !codigo) {
       return NextResponse.json(
@@ -15,6 +15,7 @@ export async function POST(request: Request) {
 
     const correoLimpio = String(correo).trim().toLowerCase()
     const codigoLimpio = String(codigo).trim().toUpperCase()
+    const idDispositivo = deviceId ? String(deviceId).trim() : 'dispositivo_generico'
 
     const db =
       (process.env as any).DB ||
@@ -33,10 +34,9 @@ export async function POST(request: Request) {
       request.headers.get('x-forwarded-for') ||
       'desconocida'
 
-    // Generar identificador de sesión único
     const nuevoToken = crypto.randomUUID()
 
-    // 1. Acceso comodín TI / Soporte (FEM26 no se pisa a sí mismo)
+    // 1. Acceso comodín TI / Soporte (sin límite de dispositivos ni concurrencia)
     if (codigoLimpio === 'FEM26') {
       await db
         .prepare('INSERT INTO registro_accesos (correo, nombre, ip) VALUES (?, ?, ?)')
@@ -51,22 +51,54 @@ export async function POST(request: Request) {
       })
     }
 
-    // 2. Consulta de credenciales en el padrón oficial
+    // 2. Consulta de credenciales en el padrón
     const usuario = await db
       .prepare(
-        'SELECT nombre, correo FROM participantes WHERE LOWER(correo) = ? AND UPPER(codigo) = ?'
+        'SELECT nombre, correo, dispositivos_autorizados FROM participantes WHERE LOWER(correo) = ? AND UPPER(codigo) = ?'
       )
       .bind(correoLimpio, codigoLimpio)
       .first()
 
     if (usuario) {
-      // Guardar nuevo session_token en D1 (invalida automáticamente sesiones anteriores)
+      // Parsear lista de dispositivos actuales
+      let listaDispositivos: string[] = []
+      if (usuario.dispositivos_autorizados) {
+        try {
+          listaDispositivos = JSON.parse(usuario.dispositivos_autorizados)
+        } catch {
+          listaDispositivos = []
+        }
+      }
+
+      // Validar si el dispositivo actual ya está autorizado
+      const yaAutorizado = listaDispositivos.includes(idDispositivo)
+
+      if (!yaAutorizado) {
+        // Límite de 2 dispositivos por participante
+        if (listaDispositivos.length >= 2) {
+          return NextResponse.json(
+            {
+              valido: false,
+              error:
+                'Has alcanzado el límite máximo permitido de dispositivos autorizados (2). Si cambiaste de equipo o necesitas reasignarlo, contáctanos a eventos@fembioma.com.',
+            },
+            { status: 403 }
+          )
+        }
+
+        // Registrar el nuevo dispositivo
+        listaDispositivos.push(idDispositivo)
+      }
+
+      // Actualizar sesión activa y lista de dispositivos en D1
       await db
-        .prepare('UPDATE participantes SET session_token = ? WHERE LOWER(correo) = ?')
-        .bind(nuevoToken, usuario.correo)
+        .prepare(
+          'UPDATE participantes SET session_token = ?, dispositivos_autorizados = ? WHERE LOWER(correo) = ?'
+        )
+        .bind(nuevoToken, JSON.stringify(listaDispositivos), usuario.correo)
         .run()
 
-      // Auditoría de ingreso
+      // Auditoría en registro_accesos
       await db
         .prepare('INSERT INTO registro_accesos (correo, nombre, ip) VALUES (?, ?, ?)')
         .bind(usuario.correo, usuario.nombre, ip)
