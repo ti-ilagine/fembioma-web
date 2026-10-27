@@ -619,7 +619,7 @@ export default function GrabacionesPage() {
                       className="text-[11px] text-[#f06d84] hover:underline flex items-center gap-1 font-medium"
                     >
                       <HelpCircle className="w-3 h-3" />
-                      ¿Olvidaste tu código?
+                      Obtén tu código
                     </button>
                   </div>
                   <div className="relative">
