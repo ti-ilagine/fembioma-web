@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, KeyRound, Copy, Check, ShieldAlert, Sparkles, Smartphone, RefreshCw } from 'lucide-react'
+import { UserPlus, KeyRound, Copy, Check, ShieldAlert, Sparkles, Smartphone, RefreshCw, Mail, Lock } from 'lucide-react'
 
 export default function RegistroAlumnosPage() {
   const [pestana, setPestana] = useState<'registro' | 'cambio' | 'dispositivos'>('registro')
@@ -92,77 +92,94 @@ Por favor guarda este mensaje para tu ingreso.`
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/40 via-slate-50 to-slate-100 text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6">
+      
+      {/* Contenedor Principal en Blanco */}
+      <div className="w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-950/5">
         
-        {/* Encabezado */}
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800">
-          <div className="p-3 bg-[#f06d84]/15 text-[#f06d84] rounded-2xl">
-            {pestana === 'registro' && <UserPlus className="w-6 h-6" />}
-            {pestana === 'cambio' && <KeyRound className="w-6 h-6" />}
-            {pestana === 'dispositivos' && <Smartphone className="w-6 h-6" />}
+        {/* Encabezado con Logo Oficial de FEMBIOMA */}
+        <div className="flex flex-col items-center text-center pb-6 border-b border-slate-100">
+          <div className="mb-3 p-2 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm">
+            <img
+              src="/logo-fembioma.png"
+              alt="FEMBIOMA World Summit 2026"
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
           </div>
-          <div>
-            <h1 className="text-xl font-serif font-bold text-white">Panel Administrativo</h1>
-            <p className="text-xs text-slate-400">Gestión de Grabaciones — Fundación & Ventas</p>
-          </div>
+          <span className="text-[11px] font-semibold tracking-widest uppercase text-[#f06d84]">
+            Plataforma Administrativa
+          </span>
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-slate-900 mt-0.5">
+            Gestión de Participantes
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Control de accesos y equipos — Fundación & Ventas
+          </p>
         </div>
 
-        {/* Pestañas de Selección */}
-        <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 mb-6 text-center">
+        {/* Pestañas de Selección en Modo Claro */}
+        <div className="grid grid-cols-3 gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 my-6 text-center">
           <button
             type="button"
             onClick={() => { setPestana('registro'); setError(''); setResultado(null) }}
-            className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all ${
+            className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
               pestana === 'registro'
-                ? 'bg-[#f06d84] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Nuevo Alumno
+            <UserPlus className={`w-3.5 h-3.5 ${pestana === 'registro' ? 'text-[#f06d84]' : 'text-slate-400'}`} />
+            <span className="truncate">Nuevo Alumno</span>
           </button>
+
           <button
             type="button"
             onClick={() => { setPestana('cambio'); setError(''); setResultado(null) }}
-            className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all ${
+            className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
               pestana === 'cambio'
-                ? 'bg-[#f06d84] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Resetear Clave
+            <KeyRound className={`w-3.5 h-3.5 ${pestana === 'cambio' ? 'text-[#f06d84]' : 'text-slate-400'}`} />
+            <span className="truncate">Reset Clave</span>
           </button>
+
           <button
             type="button"
             onClick={() => { setPestana('dispositivos'); setError(''); setResultado(null) }}
-            className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all ${
+            className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
               pestana === 'dispositivos'
-                ? 'bg-[#f06d84] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Liberar Equipos
+            <Smartphone className={`w-3.5 h-3.5 ${pestana === 'dispositivos' ? 'text-[#f06d84]' : 'text-slate-400'}`} />
+            <span className="truncate">Liberar Equipos</span>
           </button>
         </div>
 
-        {/* Descripción contextual para la pestaña de dispositivos */}
+        {/* Mensaje contextual para liberación de dispositivos */}
         {pestana === 'dispositivos' && (
-          <div className="mb-4 p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-[11px] text-slate-400">
-            ℹ️ Usa esta opción si un médico cambió de teléfono o computadora y el sistema le indica que alcanzó el límite de 2 terminales autorizados.
+          <div className="mb-5 p-3.5 bg-rose-50/70 border border-rose-100 rounded-xl text-xs text-rose-900 leading-relaxed">
+            <span className="font-semibold block mb-0.5 text-[#e0486c]">¿Cuándo usar esta opción?</span>
+            Si un médico cambió de teléfono o computadora y el sistema le indica que alcanzó el límite de 2 terminales autorizados.
           </div>
         )}
 
+        {/* Alerta de Error Clara */}
         {error && (
-          <div className="mb-5 p-4 rounded-xl border border-red-500/50 bg-red-950/40 text-red-200 text-xs flex items-center gap-3">
-            <ShieldAlert className="w-5 h-5 shrink-0 text-red-400" />
-            <span>{error}</span>
+          <div className="mb-5 p-3.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-800 text-xs flex items-center gap-3">
+            <ShieldAlert className="w-4 h-4 shrink-0 text-rose-600" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
 
+        {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {pestana === 'registro' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1.5">
                 Nombre Completo del Participante
               </label>
               <input
@@ -171,28 +188,31 @@ Por favor guarda este mensaje para tu ingreso.`
                 placeholder="Ej. Dra. Mariana López"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-sm focus:border-[#f06d84] focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:border-[#f06d84] focus:ring-2 focus:ring-[#f06d84]/20 focus:outline-none transition-all"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1.5">
               Correo Electrónico Registrado
             </label>
-            <input
-              type="email"
-              required
-              placeholder="alumno@ejemplo.com"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-sm focus:border-[#f06d84] focus:outline-none"
-            />
+            <div className="relative">
+              <input
+                type="email"
+                required
+                placeholder="alumno@ejemplo.com"
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:border-[#f06d84] focus:ring-2 focus:ring-[#f06d84]/20 focus:outline-none transition-all"
+              />
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
 
           {pestana === 'cambio' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1.5">
                 Nuevo Código Manual (Opcional - 5 Caracteres)
               </label>
               <input
@@ -201,29 +221,32 @@ Por favor guarda este mensaje para tu ingreso.`
                 placeholder="Dejar en blanco para autogenerar"
                 value={codigoManual}
                 onChange={(e) => setCodigoManual(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-sm font-mono focus:border-[#f06d84] focus:outline-none uppercase"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 text-sm font-mono focus:bg-white focus:border-[#f06d84] focus:ring-2 focus:ring-[#f06d84]/20 focus:outline-none uppercase transition-all"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1.5">
               PIN de Autorización (Fundación)
             </label>
-            <input
-              type="password"
-              required
-              placeholder="PIN administrativo"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-sm focus:border-[#f06d84] focus:outline-none"
-            />
+            <div className="relative">
+              <input
+                type="password"
+                required
+                placeholder="PIN administrativo"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:border-[#f06d84] focus:ring-2 focus:ring-[#f06d84]/20 focus:outline-none transition-all"
+              />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={cargando}
-            className="w-full mt-2 py-3.5 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full mt-2 py-3.5 rounded-xl bg-[#f06d84] hover:bg-[#e05a72] font-semibold text-white text-sm transition-all shadow-md shadow-[#f06d84]/20 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {cargando ? (
               <>
@@ -242,53 +265,57 @@ Por favor guarda este mensaje para tu ingreso.`
 
         {/* Tarjeta de resultado para Dispositivos Liberados */}
         {resultado?.tipo === 'dispositivos' && (
-          <div className="mt-6 p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
-              <Check className="w-4 h-4" />
+          <div className="mt-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1">
+            <div className="flex items-center gap-2 text-emerald-800 text-sm font-semibold">
+              <Check className="w-4 h-4 text-emerald-600" />
               <span>Equipos liberados exitosamente</span>
             </div>
-            <p className="text-xs text-slate-300">
-              Se borró el historial de terminales vinculadas para <span className="font-mono text-white">{resultado.correo}</span>. El médico ya puede ingresar desde sus nuevos equipos sin restricciones.
+            <p className="text-xs text-emerald-700 leading-relaxed">
+              Se borró el historial de terminales vinculadas para <span className="font-mono font-bold text-emerald-900">{resultado.correo}</span>. El médico ya puede ingresar desde sus nuevos equipos sin restricciones.
             </p>
           </div>
         )}
 
         {/* Tarjeta de resultado para Registro / Cambio de Clave */}
         {resultado?.participante && (
-          <div className="mt-6 p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 space-y-3">
-            <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
-              <Sparkles className="w-4 h-4" />
+          <div className="mt-6 p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-700 text-sm font-semibold">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
               <span>{resultado.mensaje}</span>
             </div>
 
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center space-y-1">
-              <p className="text-xs text-slate-400">Código de acceso activo:</p>
+            <div className="bg-white p-4 rounded-xl border border-slate-200 text-center space-y-1 shadow-sm">
+              <p className="text-xs text-slate-500 font-medium">Código de acceso activo:</p>
               <div className="text-2xl font-mono font-bold tracking-widest text-[#f06d84]">
                 {resultado.participante.codigo}
               </div>
-              <p className="text-[11px] text-slate-400">
-                {resultado.participante.nombre} ({resultado.participante.correo})
+              <p className="text-xs text-slate-600 font-medium mt-1">
+                {resultado.participante.nombre}
+              </p>
+              <p className="text-[11px] text-slate-400 font-mono">
+                {resultado.participante.correo}
               </p>
             </div>
 
             <button
               onClick={copiarPlantillaWhatsApp}
-              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center justify-center gap-2 transition-colors border border-slate-700"
+              className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-300 shadow-sm"
             >
               {copiado ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-300">¡Mensaje copiado al portapapeles!</span>
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span className="text-emerald-700">¡Mensaje copiado al portapapeles!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-4 h-4 text-slate-500" />
                   <span>Copiar texto listo para WhatsApp</span>
                 </>
               )}
             </button>
           </div>
         )}
+
       </div>
     </div>
   )
