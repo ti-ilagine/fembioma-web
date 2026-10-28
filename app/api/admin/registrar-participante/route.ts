@@ -16,17 +16,29 @@ export async function POST(request: Request) {
   try {
     const { accion, nombre, correo, pinAutorizacion, codigoManual } = await request.json()
 
-    const PIN_VALIDO = 'MARLONDICE'
-
-    if (String(pinAutorizacion).trim() !== PIN_VALIDO) {
-      return NextResponse.json(
-        { error: 'El PIN de autorización ingresado no es válido.' },
-        { status: 403 }
-      )
-    }
-
     if (!correo) {
       return NextResponse.json({ error: 'El correo es obligatorio.' }, { status: 400 })
+    }
+
+    const pinLimpio = String(pinAutorizacion || '').trim().toUpperCase()
+
+    // 1. VALIDACIÓN DIFERENCIADA DE PIN SEGÚN LA ACCIÓN
+    if (accion === 'nuevo_registro') {
+      if (pinLimpio !== 'MARLONDICE') {
+        return NextResponse.json(
+          { error: 'El PIN de autorización ingresado no es válido para registrar nuevos alumnos.' },
+          { status: 403 }
+        )
+      }
+    } else if (accion === 'cambiar_clave') {
+      if (pinLimpio !== 'MARLONCAMBIA') {
+        return NextResponse.json(
+          { error: 'El PIN de autorización ingresado no es válido para resetear códigos.' },
+          { status: 403 }
+        )
+      }
+    } else {
+      return NextResponse.json({ error: 'Acción no reconocida.' }, { status: 400 })
     }
 
     const correoLimpio = String(correo).trim().toLowerCase()
